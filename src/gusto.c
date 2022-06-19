@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 202x Anthony Buckley
+**  Copyright (C) 2022 Anthony Buckley
 ** 
 **  This file is part of Gusto.
 ** 
@@ -53,9 +53,6 @@ void initialise(UserData *, MainUi *);
 void final();
 
 extern void main_ui(UserData *, MainUi *);
-extern int check_app_dir();
-extern int reset_log();
-extern void close_log();
 extern void log_msg(char*, char*, char*, GtkWidget*);
 //extern void debug_session();
 
@@ -92,22 +89,12 @@ int main(int argc, char *argv[])
 
 void initialise(UserData *user_data, MainUi *m_ui)
 {
-    char *p;
-
     /* Set variables */
     app_msg_extra[0] = '\0';
     memset(user_data, 0, sizeof (UserData));
     memset(m_ui, 0, sizeof (MainUi));
 
-    /* Set application directory */
-    if (! check_app_dir())
-    	exit(-1);
-
-    /* Reset log file and log start */
-    if (! reset_log())
-    	exit(-1);
-
-    log_msg("SYS9001", NULL, NULL, NULL);
+    app_msg("SYS9000", NULL, NULL, NULL);
 
     return;
 }
@@ -117,9 +104,5 @@ void initialise(UserData *user_data, MainUi *m_ui)
 
 void final()
 {
-    /* Close log file */
-    log_msg("SYS9002", NULL, NULL, NULL);
-    close_log();
-
     return;
 }
