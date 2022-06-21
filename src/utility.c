@@ -67,8 +67,6 @@ void free_window_reg();
 void close_open_ui();
 int close_ui(char *);
 int is_ui_reg(char *, int);
-char * log_name();
-char * app_dir_path();
 char * home_dir();
 void strlower(char *, char *);
 void dttm_stamp(char *, size_t);

@@ -94,7 +94,7 @@ void initialise(UserData *user_data, MainUi *m_ui)
     memset(user_data, 0, sizeof (UserData));
     memset(m_ui, 0, sizeof (MainUi));
 
-    app_msg("SYS9000", NULL, NULL, NULL);
+    app_msg("SYS9003", NULL, NULL, NULL);
 
     return;
 }
