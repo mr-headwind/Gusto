@@ -52,7 +52,7 @@ typedef struct _main_ui
     GtkWidget *fn_lbl, *fn_ent, *lookup_btn, *fn_hbox;
     GtkWidget *frm_lbl, *frm_select_cbx, *frm_count_lbl, *frm_count_ent, *frm_hbox;
     GtkWidget *img_lbl, *ing_select_cbx, *img_hbox;
-    GtkWidget *ok_btn, *close_btn, *btn_hbox;
+    GtkWidget *convert_btn, *close_btn, *btn_hbox;
 
     /* Callback Handlers */
     int close_hndlr_id;

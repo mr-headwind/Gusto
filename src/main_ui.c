@@ -44,12 +44,15 @@
 #include <main.h>
 #include <user_data.h>
 #include <defs.h>
+#include <version.h>
 
 
 /* Prototypes */
 
 void main_ui(UserData *, MainUi *);
 void create_main_view(MainUi *);
+void set_heading(*m_ui);
+void set_buttons(*m_ui);
 
 void create_label(GtkWidget **, char *, char *, GtkWidget *);
 void create_label2(GtkWidget **, char *, char *, GtkWidget *, int, int, int, int);
@@ -98,13 +101,13 @@ void main_ui(UserData *user_data, MainUi *m_ui)
     gtk_widget_set_halign(GTK_WIDGET (m_ui->status_info), GTK_ALIGN_START);
 
     /* Combine everything onto the window */
-    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->app_box, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->hdg_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->status_info, TRUE, TRUE, 0);
 
     gtk_container_add(GTK_CONTAINER(m_ui->window), m_ui->main_vbox);  
 
     /* Exit when window closed */
-    g_signal_connect(m_ui->window, "destroy", G_CALLBACK(OnQuit), m_ui->window);  
+    m_ui->close_hndlr_id = g_signal_connect(m_ui->window, "destroy", G_CALLBACK(OnQuit), m_ui->window);  
 
     /* Show window */
     set_css();
@@ -128,23 +131,44 @@ void create_main_view(MainUi *m_ui)
     /* Add image type selection */
 
     /* Add control buttons */
-
-    m_ui->app_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
-
-    create_label(&(m_ui->dummy), "Dummy", "Application main items go here", m_ui->app_box);
+    set_buttons(m_ui);
 
     return;
 }
-
-
 
 
 /* Set up the heading and version */
 
 void set_heading(MainUi *m_ui)
 {  
+    char *s;
+
     m_ui->hdg_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
-    crreate_label(&(m_ui->hdg_lbl, "title_1", "Gusto video frame convert to image", m_ui->hdg_hbox);
+
+    crreate_label(&(m_ui->hdg_lbl), "title_2", "Gusto video frame convert to image", m_ui->hdg_hbox);
+
+    s = (char *) malloc(11 + strlen(VERSION));
+    sprintf(s, "(Version: %s)", VERSION);
+    create_label(&(m_ui->version_lbl), "title_3", s, m_ui->hdg_hbox);
+    free(s);
+
+    return;
+}
+
+
+/* Set up the control buttons */
+
+void set_buttons(MainUi *m_ui)
+{  
+    m_ui->btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+
+    m_ui->convert_btn = gtk_button_new_with_label("Convert");
+    g_signal_connect_swapped(p_ui->convert_btn, "clicked", G_CALLBACK(OnConvert), m_ui->window);
+    gtk_box_pack_end (GTK_BOX (m_ui->btn_hbox), m_ui->convert_btn, FALSE, FALSE, 0)
+
+    m_ui->close_btn = gtk_button_new_with_label("Close");
+    g_signal_connect_swapped(p_ui->close_btn, "clicked", G_CALLBACK(OnQuit), m_ui->window);
+    gtk_box_pack_end (GTK_BOX (m_ui->btn_hbox), m_ui->close_btn, FALSE, FALSE, 0)
 
     return;
 }
