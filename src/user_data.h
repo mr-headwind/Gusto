@@ -48,22 +48,23 @@
 
 /* Structure to contain all our information, so we can pass it around */
 
-typedef struct _UserData
+typedef struct _AppData
 {
-    GstElement *pipeline;           	/* Our one and only pipeline */
-    app_gst_objects gst_objs;		/* GST objects for viewing & recording */
+    //GstElement *pipeline;           	/* Our one and only pipeline */
+    //app_gst_objects gst_objs;		/* GST objects for viewing & recording */
     GstState state;                 	/* Current state of the pipeline */
     char *video_fn;			/* Video file name */
     int interval_type;	    		/* Type of frame conversion (eg. each frame or every n frames / seconds) */
     int frame_interval;	    		/* Interval between frame conversion */
-    char *output_dir			/* Directory to hold output image files */
+    char *output_dir;			/* Directory to hold output image files */
     char *output_prefix;		/* Prefix to use for image file names */
     char *image_type;	    		/* Image type (jpg, png, bmp) */
-} UserData;
+} AppData;
 
 
 /* Structure to group GST elements */
 
+/*
 typedef struct _app_gst_objects
 {
     GstElement *v4l2_src, *vid_rate, *v_filter, *v_convert, *v_sink;	// View only
@@ -78,4 +79,5 @@ typedef struct _app_gst_objects
     GstPad *blockpad;							// Reticule only
     gulong probe_id;							// Reticule only
     CairoOverlayState *overlay_state;					// Reticule only
-} app_gst_objects; 
+} app_gst_objects;
+*/

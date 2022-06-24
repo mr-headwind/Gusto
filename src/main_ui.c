@@ -49,10 +49,10 @@
 
 /* Prototypes */
 
-void main_ui(UserData *, MainUi *);
+void main_ui(AppData *, MainUi *);
 void create_main_view(MainUi *);
-void set_heading(*m_ui);
-void set_buttons(*m_ui);
+void set_heading(MainUi *);
+void set_buttons(MainUi *);
 
 void create_label(GtkWidget **, char *, char *, GtkWidget *);
 void create_label2(GtkWidget **, char *, char *, GtkWidget *, int, int, int, int);
@@ -64,6 +64,7 @@ GtkWidget * debug_cntr(GtkWidget *);
 
 
 extern void app_msg(char*, char *, GtkWidget *);
+extern void OnConvert(GtkWidget*, gpointer);
 extern void OnQuit(GtkWidget*, gpointer);
 extern void set_css();
 extern GtkWidget * find_widget_by_name(GtkWidget *, char *);
@@ -76,11 +77,11 @@ static const char *debug_hdr = "DEBUG-main_ui.c ";
 
 /* Create the user interface and set the CallBacks */
 
-void main_ui(UserData *user_data, MainUi *m_ui)
+void main_ui(AppData *app_data, MainUi *m_ui)
 {  
     /* Set up the UI window */
     m_ui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);  
-    g_object_set_data (G_OBJECT (m_ui->window), "user_data", user_data);
+    g_object_set_data (G_OBJECT (m_ui->window), "app_data", app_data);
     g_object_set_data (G_OBJECT (m_ui->window), "ui", m_ui);
     gtk_window_set_title(GTK_WINDOW(m_ui->window), TITLE);
     gtk_window_set_position(GTK_WINDOW(m_ui->window), GTK_WIN_POS_CENTER);
@@ -102,6 +103,9 @@ void main_ui(UserData *user_data, MainUi *m_ui)
 
     /* Combine everything onto the window */
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->hdg_hbox, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->fn_hbox, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->frm_hbox, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->codec_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->status_info, TRUE, TRUE, 0);
 
     gtk_container_add(GTK_CONTAINER(m_ui->window), m_ui->main_vbox);  
@@ -145,7 +149,7 @@ void set_heading(MainUi *m_ui)
 
     m_ui->hdg_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 
-    crreate_label(&(m_ui->hdg_lbl), "title_2", "Gusto video frame convert to image", m_ui->hdg_hbox);
+    create_label(&(m_ui->hdg_lbl), "title_2", "Gusto video frame convert to image", m_ui->hdg_hbox);
 
     s = (char *) malloc(11 + strlen(VERSION));
     sprintf(s, "(Version: %s)", VERSION);
@@ -163,11 +167,11 @@ void set_buttons(MainUi *m_ui)
     m_ui->btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 
     m_ui->convert_btn = gtk_button_new_with_label("Convert");
-    g_signal_connect_swapped(p_ui->convert_btn, "clicked", G_CALLBACK(OnConvert), m_ui->window);
+    g_signal_connect_swapped(m_ui->convert_btn, "clicked", G_CALLBACK(OnConvert), m_ui->window);
     gtk_box_pack_end (GTK_BOX (m_ui->btn_hbox), m_ui->convert_btn, FALSE, FALSE, 0)
 
     m_ui->close_btn = gtk_button_new_with_label("Close");
-    g_signal_connect_swapped(p_ui->close_btn, "clicked", G_CALLBACK(OnQuit), m_ui->window);
+    g_signal_connect_swapped(m_ui->close_btn, "clicked", G_CALLBACK(OnQuit), m_ui->window);
     gtk_box_pack_end (GTK_BOX (m_ui->btn_hbox), m_ui->close_btn, FALSE, FALSE, 0)
 
     return;

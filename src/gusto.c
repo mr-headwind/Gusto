@@ -49,11 +49,11 @@
 
 /* Prototypes */
 
-void initialise(UserData *, MainUi *);
+void initialise(AppData *, MainUi *);
 void final();
 
-extern void main_ui(UserData *, MainUi *);
-extern void log_msg(char*, char*, char*, GtkWidget*);
+extern void main_ui(AppData *, MainUi *);
+extern void app_msg(char*, char *, GtkWidget *);
 //extern void debug_session();
 
 
@@ -66,16 +66,16 @@ static const char *debug_hdr = "DEBUG-Gusto.c ";
 
 int main(int argc, char *argv[])
 {  
-    UserData user_data;
+    AppData app_data;
     MainUi m_ui;
 
     /* Initial work */
-    initialise(&user_data, &m_ui);
+    initialise(&app_data, &m_ui);
 
     /* Initialise Gtk */
     gtk_init(&argc, &argv);  
 
-    main_ui(&user_data, &m_ui);
+    main_ui(&app_data, &m_ui);
 
     gtk_main();  
 
@@ -87,14 +87,14 @@ int main(int argc, char *argv[])
 
 /* Initial work */
 
-void initialise(UserData *user_data, MainUi *m_ui)
+void initialise(AppData *app_data, MainUi *m_ui)
 {
     /* Set variables */
     app_msg_extra[0] = '\0';
-    memset(user_data, 0, sizeof (UserData));
+    memset(app_data, 0, sizeof (AppData));
     memset(m_ui, 0, sizeof (MainUi));
 
-    app_msg("SYS9003", NULL, NULL, NULL);
+    app_msg("SYS9003", NULL, NULL);
 
     return;
 }
