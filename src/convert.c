@@ -20,89 +20,47 @@
 
 
 /*
-** Application:	Gusto
+** Description: Set up a gstreamer pipeline and convert frames to images as required
 **
 ** Author:	Anthony Buckley
 **
-** Description:
-**  	 Application control for Gusto. Play video and capture individual frames.
-**
 ** History
-**	31-May-2022	Initial code
+**	24-Jun-2022	Initial code
 **
 */
 
-
-/* Includes */
-
-#include <stdlib.h>  
-#include <string.h>  
-#include <libgen.h>  
-#include <gtk/gtk.h>  
-#include <main.h>
-#include <user_data.h>
-#include <defs.h>
 
 
 /* Defines */
 
 
+/* Includes */
+#include <stdlib.h>  
+#include <string.h>  
+#include <libgen.h>  
+#include <gtk/gtk.h>  
+#include <gdk/gdkkeysyms.h>  
+#include <main.h>
+#include <user_data.h>
+#include <defs.h>
+
+
 /* Prototypes */
 
-void initialise(AppData *, MainUi *);
-void final();
+void video_convert(AppData *, MainUi *);
 
-extern void main_ui(AppData *, MainUi *);
 extern void app_msg(char*, char *, GtkWidget *);
-//extern void debug_session();
 
 
 /* Globals */
 
-static const char *debug_hdr = "DEBUG-Gusto.c ";
+static const char *debug_hdr = "DEBUG-convert.c ";
 
 
-/* Main program control */
+/* Set up a gstreamer pipeline and convert frames to images as required */
 
-int main(int argc, char *argv[])
+void video_convert(AppData *user_data, MainUi *m_ui)
 {  
-    AppData app_data;
-    MainUi m_ui;
 
-    /* Initial work */
-    initialise(&app_data, &m_ui);
-
-    /* Initialise Gtk */
-    gtk_init(&argc, &argv);  
-
-    main_ui(&app_data, &m_ui);
-
-    gtk_main();  
-
-    final();
-
-    exit(0);
-}  
-
-
-/* Initial work */
-
-void initialise(AppData *app_data, MainUi *m_ui)
-{
-    /* Set variables */
-    app_msg_extra[0] = '\0';
-    memset(app_data, 0, sizeof (AppData));
-    memset(m_ui, 0, sizeof (MainUi));
-
-    app_msg("MSG9003", NULL, NULL);
-
-    return;
-}
-
-
-/* Final work */
-
-void final()
-{
     return;
 }

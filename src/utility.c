@@ -99,6 +99,7 @@ static const char *app_messages[][2] =
     { "MSG0006", "File error: %s. "},
     { "MSG0007", "Failed to create image: %s "},
     { "MSG0008", "File %s does not exist or cannot be read. "},
+    { "MSG0009", "Error: %s has an invalid value. "},
     { "MSG9000", "Session started. "},
     { "MSG9001", "Session ends. "},
     { "MSG9003", "Failed to start application. "},
@@ -106,6 +107,7 @@ static const char *app_messages[][2] =
     { "MSG9005", "Debug: %s. "},
     { "MSG9006", "Failed to get parent container widget. %s "},
     { "MSG9007", "Failed to find widget. %s "},
+    { "MSG9008", "Failed to create ddirectory: %s "},
     { "MSG9999", "Error - Unknown error message given. "}			// NB - MUST be last
 };
 
@@ -127,8 +129,15 @@ void app_msg(char *msg_id, char *opt_str, GtkWidget *window)
     get_msg(msg, msg_id, opt_str);
     strcat(msg, " \n\%s");
 
+    /* Print the message */
+    printf("%s: %s\n", TITLE, msg); fflush(stdout);
+
+    if (app_msg_extra[0] != '\0')
+	printf("%s\n", app_msg_extra); fflush(stdout);
+
     /* Display the message */
-    info_dialog(window, msg, app_msg_extra);
+    if (window)
+	info_dialog(window, msg, app_msg_extra);
 
     /* Reset global message extra details */
     app_msg_extra[0] = '\0';
@@ -443,7 +452,7 @@ int make_dir(char *s)
 
     if ((err = mkdir(s, 0700)) != 0)
     {
-	log_msg("SYS9002", s, NULL, NULL);
+	app_msg("MSG99008", s, NULL);
 	return FALSE;
     }
 
@@ -514,12 +523,12 @@ int val_str2numb(char *s, int *numb, char *subst, GtkWidget *window)
 
 	if (errno != 0)
 	{
-	    app_msg("APP0002", subst, window);
+	    app_msg("MSG0009", subst, window);
 	    return FALSE;
 	}
 	else if (*end)
 	{
-	    app_msg("APP0002", subst, window);
+	    app_msg("MSG0009", subst, window);
 	    return FALSE;
 	}
     }
@@ -583,7 +592,7 @@ GtkWidget * find_parent(GtkWidget *init_widget)
 
     if (! GTK_IS_CONTAINER(parent_contnr))
     {
-	log_msg("SYS9011", "From initial widget", NULL, NULL);
+	app_msg("MSG9006", "From initial widget", NULL);
     	return NULL;
     }
 
@@ -600,7 +609,7 @@ GtkWidget * find_widget_by_name(GtkWidget *parent_contnr, char *nm)
 
     if (! GTK_IS_CONTAINER(parent_contnr))
     {
-	log_msg("SYS9011", "By name", NULL, NULL);
+	app_msg("MSG9006", "By name", NULL);
     	return NULL;
     }
 
@@ -643,7 +652,7 @@ GtkWidget * find_widget_by_parent(GtkWidget *init_widget, char *nm)
 
     if (! GTK_IS_CONTAINER(parent_contnr))
     {
-	log_msg("SYS9011", "By parent", NULL, NULL);
+	app_msg("MSG9006", "By parent", NULL);
     	return NULL;
     }
 
@@ -681,7 +690,7 @@ GList * ctrl_widget_list(GtkWidget *contr, GtkWidget *window)
 
     if (! GTK_IS_CONTAINER(contr))
     {
-	log_msg("SYS9011", "Get Next Control", "SYS9011", window);
+	app_msg("MSG9006", "Get Next Control", window);
 	return NULL;
     }
 

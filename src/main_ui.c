@@ -52,6 +52,9 @@
 void main_ui(AppData *, MainUi *);
 void create_main_view(MainUi *);
 void set_heading(MainUi *);
+void video_select(MainUi *);
+void video_convert_select(MainUi *);
+void image_codec_select(MainUi *);
 void set_buttons(MainUi *);
 
 void create_label(GtkWidget **, char *, char *, GtkWidget *);
@@ -106,6 +109,7 @@ void main_ui(AppData *app_data, MainUi *m_ui)
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->fn_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->frm_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->codec_hbox, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->btn_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->status_info, TRUE, TRUE, 0);
 
     gtk_container_add(GTK_CONTAINER(m_ui->window), m_ui->main_vbox);  
@@ -160,19 +164,53 @@ void set_heading(MainUi *m_ui)
 }
 
 
+/* Video file selection */
+
+void video_select(MainUi *m_ui)
+{  
+    m_ui->fn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+
+    return;
+}
+
+
+/* Frame conversion options */
+
+void video_convert_select(MainUi *m_ui)
+{  
+    m_ui->frm_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+
+    return;
+}
+
+
+/* Image file codec selection */
+
+void image_codec_select(MainUi *m_ui)
+{  
+    m_ui->codec_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+
+    return;
+}
+
+
 /* Set up the control buttons */
 
 void set_buttons(MainUi *m_ui)
 {  
     m_ui->btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+    gtk_widget_set_valign(m_ui->btn_hbox, GTK_ALIGN_CENTER);
+    gtk_widget_set_margin_top(m_ui->btn_hbox, 30);
 
     m_ui->convert_btn = gtk_button_new_with_label("Convert");
     g_signal_connect_swapped(m_ui->convert_btn, "clicked", G_CALLBACK(OnConvert), m_ui->window);
-    gtk_box_pack_end (GTK_BOX (m_ui->btn_hbox), m_ui->convert_btn, FALSE, FALSE, 0)
+    gtk_box_pack_start (GTK_BOX (m_ui->btn_hbox), m_ui->convert_btn, FALSE, FALSE, 0);
+    gtk_widget_set_margin_left(m_ui->convert_btn, 50);
 
     m_ui->close_btn = gtk_button_new_with_label("Close");
     g_signal_connect_swapped(m_ui->close_btn, "clicked", G_CALLBACK(OnQuit), m_ui->window);
-    gtk_box_pack_end (GTK_BOX (m_ui->btn_hbox), m_ui->close_btn, FALSE, FALSE, 0)
+    gtk_box_pack_start (GTK_BOX (m_ui->btn_hbox), m_ui->close_btn, FALSE, FALSE, 0);
+    gtk_widget_set_margin_left(m_ui->close_btn, 20);
 
     return;
 }
@@ -291,7 +329,7 @@ GtkWidget * debug_cntr(GtkWidget *cntr)
 
     if (! GTK_IS_CONTAINER(cntr))
     {
-	log_msg("SYS9011", "btn children", NULL, NULL);
+	app_msg("MSG9006", "btn children", NULL);
     	return NULL;
     }
 
