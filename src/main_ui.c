@@ -200,16 +200,22 @@ void set_buttons(MainUi *m_ui)
 {  
     m_ui->btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_widget_set_valign(m_ui->btn_hbox, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(m_ui->btn_hbox, GTK_ALIGN_CENTER);
     gtk_widget_set_margin_top(m_ui->btn_hbox, 30);
+    gtk_widget_set_margin_start(m_ui->btn_hbox, 100);
 
     m_ui->convert_btn = gtk_button_new_with_label("Convert");
     g_signal_connect_swapped(m_ui->convert_btn, "clicked", G_CALLBACK(OnConvert), m_ui->window);
     gtk_box_pack_start (GTK_BOX (m_ui->btn_hbox), m_ui->convert_btn, FALSE, FALSE, 0);
-    gtk_widget_set_margin_left(m_ui->convert_btn, 50);
+    gtk_widget_set_valign(m_ui->convert_btn, GTK_ALIGN_RIGHT);
+    //gtk_widget_set_margin_start(m_ui->convert_btn, 70);
+    gtk_widget_set_margin_right(m_ui->convert_btn, 20);
+    //gtk_widget_set_margin_left(m_ui->convert_btn, 50);
 
     m_ui->close_btn = gtk_button_new_with_label("Close");
     g_signal_connect_swapped(m_ui->close_btn, "clicked", G_CALLBACK(OnQuit), m_ui->window);
     gtk_box_pack_start (GTK_BOX (m_ui->btn_hbox), m_ui->close_btn, FALSE, FALSE, 0);
+    gtk_widget_set_valign(m_ui->close_btn, GTK_ALIGN_LEFT);
     gtk_widget_set_margin_left(m_ui->close_btn, 20);
 
     return;

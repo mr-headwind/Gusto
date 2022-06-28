@@ -94,7 +94,7 @@ void initialise(AppData *app_data, MainUi *m_ui)
     memset(app_data, 0, sizeof (AppData));
     memset(m_ui, 0, sizeof (MainUi));
 
-    app_msg("MSG9003", NULL, NULL);
+    app_msg("MSG9000", '\0', NULL);
 
     return;
 }
