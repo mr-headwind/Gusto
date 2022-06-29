@@ -81,7 +81,7 @@ static const char *debug_hdr = "DEBUG-css.c ";
 static char *css_data_fhd = 
 	"@define-color DARK_BLUE rgba(0%,0%,50%,1.0); "
 	"@define-color METAL_GREY rgba(55,83,103,1.0); "
-	"button, entry, label { font-family: Sans; font-size: 12px; }"
+	"button, entry, label { font-family: Sans; font-size: 14px; }"
 	"label#data_1 { color: @DARK_BLUE; }"
 	"label#data_2 { color: #800000; font-family: Sans; font-size: 11px; }"
 	"label#data_3 { color: #400080; font-family: Sans; font-size: 10px; }"
@@ -98,7 +98,7 @@ static char *css_data_fhd =
 	"frame > label { color: #800000; font-weight: 500; }"
 	"combobox * { color: @METAL_GREY; font-family: Sans; font-size: 12px; }"
 	"progressbar#pbar_1 { color: @DARK_BLUE; font-family: Sans; font-size: 10px; }"
-	"#button_1 * { color: #708090; font-weight: bold; }"
+	"#button_1 * { color: #708090; font-weight: bold; font-size: 14px; }"
 	"notebook * { font-family: Sans; font-size: 11px; }"
 	"textview { font-family: Sans; font-size: 12px; }"
 	"textview#txtview_1 { font-family: Sans; font-size: 11px; }"

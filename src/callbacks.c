@@ -47,9 +47,11 @@
 /* Prototypes */
 
 void OnConvert(GtkWidget*, gpointer *);
+void OnVideoBrowse(GtkWidget*, gpointer *);
 void OnQuit(GtkWidget*, gpointer *);
 
 
+extern void video_select(AppData *, MainUi *);
 extern void video_convert(AppData *, MainUi *);
 extern void free_window_reg();
 extern void close_open_ui();
@@ -83,6 +85,26 @@ void OnConvert(GtkWidget *btn, gpointer *user_data)
 
     /* Conversion */
     video_convert(app_data, m_ui);
+
+    return;
+}  
+
+
+/* Callback - Video browse and selection */
+
+void OnVideoBrowse(GtkWidget *btn, gpointer *user_data)
+{  
+    GtkWidget *window;
+    MainUi *m_ui;
+    AppData *app_data;
+
+    /* Get data */
+    window = (GtkWidget *) user_data;
+    m_ui = (MainUi *) g_object_get_data (G_OBJECT (window), "ui");
+    app_data = (AppData *) g_object_get_data (G_OBJECT (window), "app_data");
+
+    /* Conversion */
+    video_select(app_data, m_ui);
 
     return;
 }  

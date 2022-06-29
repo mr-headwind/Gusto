@@ -48,6 +48,7 @@
 /* Prototypes */
 
 void video_convert(AppData *, MainUi *);
+void video_select(AppData *, MainUi *);
 
 extern void app_msg(char*, char *, GtkWidget *);
 
@@ -60,6 +61,15 @@ static const char *debug_hdr = "DEBUG-convert.c ";
 /* Set up a gstreamer pipeline and convert frames to images as required */
 
 void video_convert(AppData *user_data, MainUi *m_ui)
+{  
+
+    return;
+}
+
+
+/* Browse and select a video file to convert */
+
+void video_select(AppData *user_data, MainUi *m_ui)
 {  
 
     return;

@@ -51,11 +51,11 @@
 
 void main_ui(AppData *, MainUi *);
 void create_main_view(MainUi *);
-void set_heading(MainUi *);
-void video_select(MainUi *);
-void video_convert_select(MainUi *);
-void image_codec_select(MainUi *);
-void set_buttons(MainUi *);
+void set_heading_widgets(MainUi *);
+void video_select_widgets(MainUi *);
+void video_convert_select_widgets(MainUi *);
+void image_codec_select_widgets(MainUi *);
+void set_button_widgets(MainUi *);
 
 void create_label(GtkWidget **, char *, char *, GtkWidget *);
 void create_label2(GtkWidget **, char *, char *, GtkWidget *, int, int, int, int);
@@ -67,6 +67,7 @@ GtkWidget * debug_cntr(GtkWidget *);
 
 
 extern void app_msg(char*, char *, GtkWidget *);
+extern void OnVideoBrowse(GtkWidget*, gpointer);
 extern void OnConvert(GtkWidget*, gpointer);
 extern void OnQuit(GtkWidget*, gpointer);
 extern void set_css();
@@ -106,7 +107,7 @@ void main_ui(AppData *app_data, MainUi *m_ui)
 
     /* Combine everything onto the window */
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->hdg_hbox, FALSE, FALSE, 0);
-    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->fn_hbox, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->fn_grid, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->frm_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->codec_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->btn_hbox, FALSE, FALSE, 0);
@@ -130,7 +131,7 @@ void main_ui(AppData *app_data, MainUi *m_ui)
 void create_main_view(MainUi *m_ui)
 {  
     /* Add heading */
-    set_heading(m_ui);
+    set_heading_widgets(m_ui);
 
     /* Add Video file selection and entry */
 
@@ -139,7 +140,7 @@ void create_main_view(MainUi *m_ui)
     /* Add image type selection */
 
     /* Add control buttons */
-    set_buttons(m_ui);
+    set_button_widgets(m_ui);
 
     return;
 }
@@ -147,11 +148,13 @@ void create_main_view(MainUi *m_ui)
 
 /* Set up the heading and version */
 
-void set_heading(MainUi *m_ui)
+void set_heading_widgets(MainUi *m_ui)
 {  
     char *s;
 
     m_ui->hdg_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+    gtk_widget_set_valign(m_ui->btn_hbox, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(m_ui->btn_hbox, GTK_ALIGN_CENTER);
 
     create_label(&(m_ui->hdg_lbl), "title_2", "Gusto video frame convert to image", m_ui->hdg_hbox);
 
@@ -166,9 +169,18 @@ void set_heading(MainUi *m_ui)
 
 /* Video file selection */
 
-void video_select(MainUi *m_ui)
+void video_select_widgets(MainUi *m_ui)
 {  
-    m_ui->fn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+    m_ui->fn_grid = gtk_grid_new();
+    gtk_widget_set_valign(m_ui->fn_grid, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(m_ui->fn_grid, GTK_ALIGN_CENTER);
+
+    create_label2(&(m_ui->fn_lbl), "title_4", "Video file", m_ui->fn_grid, 0, 0, 1, 1);
+
+    create_entry(&(m_ui->fn_ent), "ent_1", m_ui->fn_grid, 1, 0);
+
+    m_ui->browse_btn = gtk_button_new_with_label("Browse...");
+    g_signal_connect(m_ui->browse_btn, "clicked", G_CALLBACK(OnVideoBrowse), (gpointer) m_ui);
 
     return;
 }
@@ -176,7 +188,7 @@ void video_select(MainUi *m_ui)
 
 /* Frame conversion options */
 
-void video_convert_select(MainUi *m_ui)
+void video_convert_select_widgets(MainUi *m_ui)
 {  
     m_ui->frm_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 
@@ -186,7 +198,7 @@ void video_convert_select(MainUi *m_ui)
 
 /* Image file codec selection */
 
-void image_codec_select(MainUi *m_ui)
+void image_codec_select_widgets(MainUi *m_ui)
 {  
     m_ui->codec_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 
@@ -196,7 +208,7 @@ void image_codec_select(MainUi *m_ui)
 
 /* Set up the control buttons */
 
-void set_buttons(MainUi *m_ui)
+void set_button_widgets(MainUi *m_ui)
 {  
     m_ui->btn_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_widget_set_valign(m_ui->btn_hbox, GTK_ALIGN_CENTER);
@@ -207,15 +219,15 @@ void set_buttons(MainUi *m_ui)
     m_ui->convert_btn = gtk_button_new_with_label("Convert");
     g_signal_connect_swapped(m_ui->convert_btn, "clicked", G_CALLBACK(OnConvert), m_ui->window);
     gtk_box_pack_start (GTK_BOX (m_ui->btn_hbox), m_ui->convert_btn, FALSE, FALSE, 0);
-    gtk_widget_set_valign(m_ui->convert_btn, GTK_ALIGN_RIGHT);
-    //gtk_widget_set_margin_start(m_ui->convert_btn, 70);
+    gtk_widget_set_valign(m_ui->convert_btn, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(m_ui->convert_btn, GTK_ALIGN_CENTER);
     gtk_widget_set_margin_right(m_ui->convert_btn, 20);
-    //gtk_widget_set_margin_left(m_ui->convert_btn, 50);
 
     m_ui->close_btn = gtk_button_new_with_label("Close");
     g_signal_connect_swapped(m_ui->close_btn, "clicked", G_CALLBACK(OnQuit), m_ui->window);
     gtk_box_pack_start (GTK_BOX (m_ui->btn_hbox), m_ui->close_btn, FALSE, FALSE, 0);
-    gtk_widget_set_valign(m_ui->close_btn, GTK_ALIGN_LEFT);
+    gtk_widget_set_valign(m_ui->close_btn, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(m_ui->close_btn, GTK_ALIGN_CENTER);
     gtk_widget_set_margin_left(m_ui->close_btn, 20);
 
     return;
