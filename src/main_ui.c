@@ -108,8 +108,8 @@ void main_ui(AppData *app_data, MainUi *m_ui)
     /* Combine everything onto the window */
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->hdg_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->fn_grid, FALSE, FALSE, 0);
-    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->frm_hbox, FALSE, FALSE, 0);
-    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->codec_hbox, FALSE, FALSE, 0);
+    //gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->frm_hbox, FALSE, FALSE, 0);
+    //gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->codec_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->btn_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->status_info, TRUE, TRUE, 0);
 
@@ -134,6 +134,7 @@ void create_main_view(MainUi *m_ui)
     set_heading_widgets(m_ui);
 
     /* Add Video file selection and entry */
+    video_select_widgets(m_ui);
 
     /* Add frame conversion criteria */
 
@@ -153,8 +154,8 @@ void set_heading_widgets(MainUi *m_ui)
     char *s;
 
     m_ui->hdg_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
-    gtk_widget_set_valign(m_ui->btn_hbox, GTK_ALIGN_CENTER);
-    gtk_widget_set_halign(m_ui->btn_hbox, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(m_ui->hdg_hbox, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(m_ui->hdg_hbox, GTK_ALIGN_CENTER);
 
     create_label(&(m_ui->hdg_lbl), "title_2", "Gusto video frame convert to image", m_ui->hdg_hbox);
 
