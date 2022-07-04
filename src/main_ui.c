@@ -178,9 +178,11 @@ void video_select_widgets(MainUi *m_ui)
 
     create_label2(&(m_ui->fn_lbl), "title_4", "Video file", m_ui->fn_grid, 0, 0, 1, 1);
 
-    create_entry(&(m_ui->fn_ent), "ent_1", m_ui->fn_grid, 1, 0);
+    create_entry(&(m_ui->fn_ent), "fn", m_ui->fn_grid, 1, 0);
+    gtk_entry_set_width_chars(GTK_ENTRY (m_ui->fn_ent), 30);
 
     m_ui->browse_btn = gtk_button_new_with_label("Browse...");
+    gtk_grid_attach(GTK_GRID (m_ui->fn_grid), m_ui->browse_btn, 2, 0, 1, 1);
     g_signal_connect(m_ui->browse_btn, "clicked", G_CALLBACK(OnVideoBrowse), (gpointer) m_ui);
 
     return;
