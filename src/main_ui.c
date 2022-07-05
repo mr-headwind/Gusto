@@ -108,8 +108,8 @@ void main_ui(AppData *app_data, MainUi *m_ui)
     /* Combine everything onto the window */
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->hdg_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->fn_grid, FALSE, FALSE, 0);
-    //gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->frm_hbox, FALSE, FALSE, 0);
-    //gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->codec_hbox, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->frm_grid, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->codec_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->btn_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->status_info, TRUE, TRUE, 0);
 
@@ -137,8 +137,10 @@ void create_main_view(MainUi *m_ui)
     video_select_widgets(m_ui);
 
     /* Add frame conversion criteria */
+    video_convert_select_widgets(m_ui);
 
     /* Add image type selection */
+    image_codec_select_widgets(m_ui);
 
     /* Add control buttons */
     set_button_widgets(m_ui);
@@ -193,7 +195,19 @@ void video_select_widgets(MainUi *m_ui)
 
 void video_convert_select_widgets(MainUi *m_ui)
 {  
-    m_ui->frm_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+    const char *frame_selection_arr[] = { "Every frame", "Selected frames", "Selected time" };
+    const int select_max = 3;
+
+    m_ui->frm_grid = gtk_grid_new();
+    gtk_widget_set_valign(m_ui->frm_grid, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(m_ui->frm_grid, GTK_ALIGN_CENTER);
+
+    create_cbox(&(m_ui->frm_select_cbx), "frm_sel", frame_selection_arr, select_max, 0, m_ui->frm_grid, 0, 0);
+
+    create_label2(&(m_ui->frm_interval_lbl), "title_4", "Interval", m_ui->frm_grid, 1, 0, 1, 1);
+
+    create_entry(&(m_ui->frm_interval_ent), "interval", m_ui->frm_grid, 2, 0);
+    gtk_entry_set_width_chars(GTK_ENTRY (m_ui->frm_interval_ent), 5);
 
     return;
 }

@@ -127,7 +127,7 @@ void app_msg(char *msg_id, char *opt_str, GtkWidget *window)
 
     /* Lookup the message */
     get_msg(msg, msg_id, opt_str);
-    strcat(msg, " \n\%s");
+    strcat(msg, " \n");
 
     /* Print the message */
     printf("%s: %s\n", TITLE, msg); fflush(stdout);

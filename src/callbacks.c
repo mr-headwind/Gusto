@@ -99,9 +99,8 @@ void OnVideoBrowse(GtkWidget *btn, gpointer *user_data)
     AppData *app_data;
 
     /* Get data */
-    window = (GtkWidget *) user_data;
-    m_ui = (MainUi *) g_object_get_data (G_OBJECT (window), "ui");
-    app_data = (AppData *) g_object_get_data (G_OBJECT (window), "app_data");
+    m_ui = (MainUi *) user_data;
+    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
 
     /* Conversion */
     video_select(app_data, m_ui);
