@@ -54,7 +54,6 @@ void create_main_view(MainUi *);
 void set_heading_widgets(MainUi *);
 void video_select_widgets(MainUi *);
 void video_convert_select_widgets(MainUi *);
-void image_codec_select_widgets(MainUi *);
 void set_button_widgets(MainUi *);
 
 void create_label(GtkWidget **, char *, char *, GtkWidget *);
@@ -109,7 +108,6 @@ void main_ui(AppData *app_data, MainUi *m_ui)
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->hdg_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->fn_grid, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->frm_grid, FALSE, FALSE, 0);
-    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->codec_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->btn_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->status_info, TRUE, TRUE, 0);
 
@@ -139,9 +137,6 @@ void create_main_view(MainUi *m_ui)
     /* Add frame conversion criteria */
     video_convert_select_widgets(m_ui);
 
-    /* Add image type selection */
-    image_codec_select_widgets(m_ui);
-
     /* Add control buttons */
     set_button_widgets(m_ui);
 
@@ -158,6 +153,7 @@ void set_heading_widgets(MainUi *m_ui)
     m_ui->hdg_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_widget_set_valign(m_ui->hdg_hbox, GTK_ALIGN_CENTER);
     gtk_widget_set_halign(m_ui->hdg_hbox, GTK_ALIGN_CENTER);
+    gtk_widget_set_margin_bottom(m_ui->hdg_hbox, 40);
 
     create_label(&(m_ui->hdg_lbl), "title_2", "Gusto video frame convert to image", m_ui->hdg_hbox);
 
@@ -177,6 +173,7 @@ void video_select_widgets(MainUi *m_ui)
     m_ui->fn_grid = gtk_grid_new();
     gtk_widget_set_valign(m_ui->fn_grid, GTK_ALIGN_CENTER);
     gtk_widget_set_halign(m_ui->fn_grid, GTK_ALIGN_CENTER);
+    gtk_widget_set_margin_bottom(m_ui->fn_grid, 10);
 
     create_label2(&(m_ui->fn_lbl), "title_4", "Video file", m_ui->fn_grid, 0, 0, 1, 1);
 
@@ -195,29 +192,23 @@ void video_select_widgets(MainUi *m_ui)
 
 void video_convert_select_widgets(MainUi *m_ui)
 {  
-    const char *frame_selection_arr[] = { "Every frame", "Selected frames", "Selected time" };
-    const int select_max = 3;
+    const char *frame_selection_arr[] = { "Every frame", "Selected frames", "Selected time (mins.)" };
+    const int frm_max = 3;
+    const char *codec_selection_arr[] = { "JPG", "PNG", "BMP" };
+    const int codec_max = 3;
 
     m_ui->frm_grid = gtk_grid_new();
     gtk_widget_set_valign(m_ui->frm_grid, GTK_ALIGN_CENTER);
     gtk_widget_set_halign(m_ui->frm_grid, GTK_ALIGN_CENTER);
 
-    create_cbox(&(m_ui->frm_select_cbx), "frm_sel", frame_selection_arr, select_max, 0, m_ui->frm_grid, 0, 0);
+    create_cbox(&(m_ui->frm_select_cbx), "frm_sel", frame_selection_arr, frm_max, 0, m_ui->frm_grid, 0, 0);
 
     create_label2(&(m_ui->frm_interval_lbl), "title_4", "Interval", m_ui->frm_grid, 1, 0, 1, 1);
-
     create_entry(&(m_ui->frm_interval_ent), "interval", m_ui->frm_grid, 2, 0);
-    gtk_entry_set_width_chars(GTK_ENTRY (m_ui->frm_interval_ent), 5);
+    gtk_entry_set_width_chars(GTK_ENTRY (m_ui->frm_interval_ent), 3);
 
-    return;
-}
-
-
-/* Image file codec selection */
-
-void image_codec_select_widgets(MainUi *m_ui)
-{  
-    m_ui->codec_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+    create_label2(&(m_ui->codec_lbl), "title_4", "Codec", m_ui->frm_grid, 3, 0, 1, 1);
+    create_cbox(&(m_ui->codec_select_cbx), "codec_sel", codec_selection_arr, codec_max, 0, m_ui->frm_grid, 4, 0);
 
     return;
 }

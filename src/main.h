@@ -51,7 +51,7 @@ typedef struct _main_ui
     GtkWidget *hdg_lbl, *version_lbl, *hdg_hbox;
     GtkWidget *fn_lbl, *fn_ent, *browse_btn, *fn_grid;
     GtkWidget *frm_lbl, *frm_select_cbx, *frm_interval_lbl, *frm_interval_ent, *frm_grid;
-    GtkWidget *codec_lbl, *codec_select_cbx, *codec_hbox;
+    GtkWidget *codec_lbl, *codec_select_cbx;
     GtkWidget *convert_btn, *close_btn, *btn_hbox;
 
     /* Callback Handlers */
