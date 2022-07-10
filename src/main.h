@@ -61,6 +61,7 @@ typedef struct _main_ui
     int main_width;
     int main_height;
 
+    /* Other values */
     int duration;
     int no_of_frames;
 } MainUi;

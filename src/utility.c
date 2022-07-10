@@ -191,9 +191,20 @@ gint query_dialog(GtkWidget *window, char *msg, char *opt)
 
 /* Return the Home directory path */
 
-char * home_dir()
+char * home_dir(GtkWidget *window)
 {
-    return Home;
+    if (Home)
+    {
+	return Home;
+    }
+    else
+    {
+    	if ((Home = getenv("HOME")) == NULL)
+	{
+	    app_msg("MSG9004", '\0', window);
+	    return NULL;
+	}
+    }
 }
 
 

@@ -99,6 +99,7 @@ static char *css_data_fhd =
 	"combobox * { color: @METAL_GREY; font-family: Sans; font-size: 12px; }"
 	"progressbar#pbar_1 { color: @DARK_BLUE; font-family: Sans; font-size: 10px; }"
 	"#button_1 * { color: #708090; font-weight: bold; font-size: 14px; }"
+	"#button_2 * { color: #800000; font-size: 14px; }"
 	"notebook * { font-family: Sans; font-size: 11px; }"
 	"textview { font-family: Sans; font-size: 12px; }"
 	"textview#txtview_1 { font-family: Sans; font-size: 11px; }"
