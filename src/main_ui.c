@@ -67,6 +67,7 @@ GtkWidget * debug_cntr(GtkWidget *);
 
 extern void app_msg(char*, char *, GtkWidget *);
 extern void OnVideoBrowse(GtkWidget*, gpointer);
+extern void OnFrameSet(GtkWidget*, gpointer);
 extern void OnConvert(GtkWidget*, gpointer);
 extern void OnQuit(GtkWidget*, gpointer);
 extern void set_css();
@@ -161,6 +162,7 @@ void set_heading_widgets(MainUi *m_ui)
     s = (char *) malloc(11 + strlen(VERSION));
     sprintf(s, "(Version: %s)", VERSION);
     create_label(&(m_ui->version_lbl), "title_3", s, m_ui->hdg_hbox);
+    gtk_widget_set_valign(m_ui->version_lbl, GTK_ALIGN_END);
     free(s);
 
     return;
@@ -183,10 +185,10 @@ void video_select_widgets(MainUi *m_ui)
     gtk_entry_set_text(GTK_ENTRY (m_ui->fn_ent), home_dir(m_ui->window));
     gtk_widget_set_margin_left(m_ui->fn_ent, 10);
 
-    m_ui->browse_btn = gtk_button_new_with_label("Browse...");
-    gtk_widget_set_margin_left(m_ui->browse_btn, 10);
-    gtk_grid_attach(GTK_GRID (m_ui->fn_grid), m_ui->browse_btn, 2, 0, 1, 1);
-    g_signal_connect(m_ui->browse_btn, "clicked", G_CALLBACK(OnVideoBrowse), (gpointer) m_ui);
+    m_ui->browse_video_btn = gtk_button_new_with_label("Browse...");
+    gtk_widget_set_margin_left(m_ui->browse_video_btn, 10);
+    gtk_grid_attach(GTK_GRID (m_ui->fn_grid), m_ui->browse_video_btn, 2, 0, 1, 1);
+    g_signal_connect(m_ui->browse_video_btn, "clicked", G_CALLBACK(OnVideoBrowse), (gpointer) m_ui);
 
     return;
 }
@@ -206,6 +208,7 @@ void video_convert_select_widgets(MainUi *m_ui)
     gtk_widget_set_halign(m_ui->frm_grid, GTK_ALIGN_START);
 
     create_cbox(&(m_ui->frm_select_cbx), "frm_sel", frame_selection_arr, frm_max, 0, m_ui->frm_grid, 0, 0);
+    g_signal_connect(m_ui->frm_select_cbx, "changed", G_CALLBACK(OnFrameSet), (gpointer) m_ui);
 
     create_label2(&(m_ui->frm_interval_lbl), "title_4", "Interval", m_ui->frm_grid, 1, 0, 1, 1);
     gtk_widget_set_margin_left(m_ui->frm_interval_lbl, 10);
