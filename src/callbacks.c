@@ -48,11 +48,13 @@
 
 void OnConvert(GtkWidget*, gpointer *);
 void OnVideoBrowse(GtkWidget*, gpointer *);
+void OnDirBrowse(GtkWidget*, gpointer *);
 void OnFrameSet(GtkWidget *, gpointer *);
 void OnQuit(GtkWidget*, gpointer *);
 
 
 extern void video_select(AppData *, MainUi *);
+extern void output_dir_select(AppData *, MainUi *);
 extern void set_convert_widgets(AppData *, MainUi *);
 extern void video_convert(AppData *, MainUi *);
 extern void free_window_reg();
@@ -105,6 +107,24 @@ void OnVideoBrowse(GtkWidget *btn, gpointer *user_data)
 
     /* Conversion */
     video_select(app_data, m_ui);
+
+    return;
+}  
+
+
+/* Callback - Output directory selection */
+
+void OnDirBrowse(GtkWidget *btn, gpointer *user_data)
+{  
+    MainUi *m_ui;
+    AppData *app_data;
+
+    /* Get data */
+    m_ui = (MainUi *) user_data;
+    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
+
+    /* Conversion */
+    output_dir_select(app_data, m_ui);
 
     return;
 }  

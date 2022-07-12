@@ -49,6 +49,7 @@
 
 void video_convert(AppData *, MainUi *);
 void video_select(AppData *, MainUi *);
+void output_dir_select(AppData *, MainUi *);
 void set_convert_widgets(AppData *, MainUi *);
 
 extern void app_msg(char*, char *, GtkWidget *);
@@ -77,6 +78,15 @@ void video_select(AppData *user_data, MainUi *m_ui)
 }
 
 
+/* Browse and select a directory to hold output images */
+
+void output_dir_select(AppData *user_data, MainUi *m_ui)
+{  
+
+    return;
+}
+
+
 /* Set widgets sensitivity and visibility as required */
 
 void set_convert_widgets(AppData *user_data, MainUi *m_ui)
@@ -87,16 +97,19 @@ void set_convert_widgets(AppData *user_data, MainUi *m_ui)
 
     if (idx == 0)
     {
-	gtk_widget_set_sensitive (m_ui->frm_interval_ent, FALSE);
-	gtk_entry_set_text(GTK_ENTRY (m_ui->frm_interval_ent), "1");
+	gtk_widget_set_sensitive (m_ui->frm_interval, FALSE);
+	gtk_entry_set_text(GTK_ENTRY (m_ui->frm_interval), "1");
+	gtk_widget_set_visible (m_ui->int_hbox, TRUE);
     }
     else if (idx == 1)
     {
-	gtk_widget_set_sensitive (m_ui->frm_interval_ent, TRUE);
+	gtk_widget_set_sensitive (m_ui->frm_interval, TRUE);
+	gtk_widget_set_visible (m_ui->int_hbox, TRUE);
     }
     else if (idx == 2)
     {
-	gtk_widget_set_sensitive (m_ui->frm_interval_ent, TRUE);
+	gtk_widget_set_sensitive (m_ui->frm_interval, TRUE);
+	gtk_widget_set_visible (m_ui->int_hbox, FALSE);
     }
 
     return;
