@@ -97,18 +97,18 @@ void set_convert_widgets(AppData *user_data, MainUi *m_ui)
 
     if (idx == 0)
     {
-	gtk_widget_set_sensitive (m_ui->frm_interval, FALSE);
 	gtk_entry_set_text(GTK_ENTRY (m_ui->frm_interval), "1");
-	gtk_widget_set_visible (m_ui->int_hbox, TRUE);
+	gtk_widget_set_visible (m_ui->int_hbox, FALSE);
+	gtk_widget_set_visible (m_ui->time_hbox, FALSE);
     }
     else if (idx == 1)
     {
-	gtk_widget_set_sensitive (m_ui->frm_interval, TRUE);
 	gtk_widget_set_visible (m_ui->int_hbox, TRUE);
+	gtk_widget_set_visible (m_ui->time_hbox, FALSE);
     }
     else if (idx == 2)
     {
-	gtk_widget_set_sensitive (m_ui->frm_interval, TRUE);
+	gtk_widget_set_visible (m_ui->time_hbox, TRUE);
 	gtk_widget_set_visible (m_ui->int_hbox, FALSE);
     }
 

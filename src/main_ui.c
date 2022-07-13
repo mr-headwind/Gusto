@@ -123,6 +123,8 @@ void main_ui(AppData *app_data, MainUi *m_ui)
     /* Show window */
     set_css();
     gtk_widget_show_all(m_ui->window);
+    gtk_widget_set_visible (m_ui->int_hbox, FALSE);
+    gtk_widget_set_visible (m_ui->time_hbox, FALSE);
 
     return;
 }
@@ -239,24 +241,50 @@ void video_convert_select_widgets(MainUi *m_ui)
     create_cbox(&(m_ui->frm_select_cbx), "frm_sel", frame_selection_arr, frm_max, 0, m_ui->frm_grid, 0, 0);
     g_signal_connect(m_ui->frm_select_cbx, "changed", G_CALLBACK(OnFrameSet), (gpointer) m_ui);
 
-    /* Selection of each frame or selected ones */
+    /* Selected frames */
     m_ui->int_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_widget_set_valign(m_ui->int_hbox, GTK_ALIGN_CENTER);
     gtk_widget_set_halign(m_ui->int_hbox, GTK_ALIGN_CENTER);
 
-    create_label(&(m_ui->frm_interval_lbl), "title_4", "Interval", m_ui->int_hbox);
+    create_label(&(m_ui->frm_interval_lbl), "title_4", "Every nth", m_ui->int_hbox);
     gtk_widget_set_margin_left(m_ui->frm_interval_lbl, 10);
 
     m_ui->frm_interval = gtk_entry_new();
     gtk_widget_set_name(m_ui->frm_interval, "ent_1");
     gtk_entry_set_width_chars(GTK_ENTRY (m_ui->frm_interval), 3);
-    gtk_entry_set_text(GTK_ENTRY (m_ui->frm_interval), "1");
-    gtk_widget_set_sensitive (m_ui->frm_interval, FALSE);
     gtk_widget_set_margin_left(m_ui->frm_interval, 10);
-    gtk_box_pack_end (GTK_BOX (m_ui->int_hbox), m_ui->frm_interval, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (m_ui->int_hbox), m_ui->frm_interval, FALSE, FALSE, 0);
+
     gtk_grid_attach(GTK_GRID (m_ui->frm_grid), m_ui->int_hbox, 2, 0, 1, 1);
 
-    /* Select frames for a set part of the video */
+    /* Select each frame */
+    gtk_entry_set_text(GTK_ENTRY (m_ui->frm_interval), "1");
+    gtk_widget_set_sensitive (m_ui->frm_interval, FALSE);
+
+    /* Select frames for a part of the video */
+    m_ui->time_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+    gtk_widget_set_valign(m_ui->time_hbox, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(m_ui->time_hbox, GTK_ALIGN_CENTER);
+
+    create_label(&(m_ui->video_start_lbl), "title_4", "Start at", m_ui->time_hbox);
+    gtk_widget_set_margin_left(m_ui->video_start_lbl, 10);
+
+    m_ui->video_start = gtk_entry_new();
+    gtk_widget_set_name(m_ui->video_start, "ent_1");
+    gtk_entry_set_width_chars(GTK_ENTRY (m_ui->video_start), 3);
+    gtk_widget_set_margin_left(m_ui->video_start, 10);
+    gtk_box_pack_start (GTK_BOX (m_ui->time_hbox), m_ui->video_start, FALSE, FALSE, 0);
+
+    create_label(&(m_ui->duration_lbl), "title_4", "Duration", m_ui->time_hbox);
+    gtk_widget_set_margin_left(m_ui->duration_lbl, 10);
+
+    m_ui->duration = gtk_entry_new();
+    gtk_widget_set_name(m_ui->duration, "ent_1");
+    gtk_entry_set_width_chars(GTK_ENTRY (m_ui->duration), 3);
+    gtk_widget_set_margin_left(m_ui->duration, 10);
+    gtk_box_pack_start (GTK_BOX (m_ui->time_hbox), m_ui->duration, FALSE, FALSE, 0);
+
+    gtk_grid_attach(GTK_GRID (m_ui->frm_grid), m_ui->time_hbox, 2, 0, 1, 1);
 
     /* Select the type of output image format */
     create_label2(&(m_ui->codec_lbl), "title_4", "Codec", m_ui->frm_grid, 3, 0, 1, 1);
