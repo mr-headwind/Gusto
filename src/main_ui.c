@@ -259,7 +259,6 @@ void video_convert_select_widgets(MainUi *m_ui)
 
     /* Select each frame */
     gtk_entry_set_text(GTK_ENTRY (m_ui->frm_interval), "1");
-    gtk_widget_set_sensitive (m_ui->frm_interval, FALSE);
 
     /* Select frames for a part of the video */
     m_ui->time_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);

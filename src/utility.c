@@ -52,6 +52,7 @@
 #include <time.h>
 #include <gtk/gtk.h>
 #include <defs.h>
+#include <main.h>
 
 
 /* Prototypes */
@@ -59,6 +60,7 @@
 void app_msg(char*, char *, GtkWidget*);
 void info_dialog(GtkWidget *, char *, char *);
 gint query_dialog(GtkWidget *, char *, char *);
+void choose_file_dialog(AppData *, MainUi *);
 void get_msg(char*, char*, char*);
 void string_trim(char*);
 void register_window(GtkWidget *);
@@ -186,6 +188,50 @@ gint query_dialog(GtkWidget *window, char *msg, char *opt)
     gtk_widget_destroy (dialog);
 
     return res;
+}
+
+
+/* Callback - Set capture directory */
+
+void choose_file_dialog(AppData *app_data, MainUi *m_ui)
+{  
+    GtkWidget *dialog;
+    gint res;
+
+    /* Selection */
+    dialog = gtk_file_chooser_dialog_new ("Output Location",
+					  GTK_WINDOW (m_ui->window),
+					  GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER,
+					  "_Cancel", GTK_RESPONSE_CANCEL,
+					  "_Apply", GTK_RESPONSE_APPLY,
+					  NULL);
+
+    res = gtk_dialog_run (GTK_DIALOG (dialog));
+
+    if (res == GTK_RESPONSE_APPLY)
+    {
+	GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
+	app_data->output_dir = gtk_file_chooser_get_filename (chooser);
+
+	if (app_data->output_dir)
+	{
+	    gtk_entry_set_text (GTK_ENTRY (m_ui->out_dir), app_data->output_dir);
+
+	    if (! check_dir(app_data->output_dir))
+	    {
+		res = query_dialog(m_ui->window, "Location (%s) does not exist. Create it?", app_data->output_dir);
+
+		if (res == GTK_RESPONSE_YES)
+		    make_dir(app_data->output_dir);
+	    }
+	}
+
+	g_free (app_data->output_dir);
+    }
+
+    gtk_widget_destroy (dialog);
+
+    return;
 }
 
 
