@@ -64,7 +64,9 @@ extern void app_msg(char*, char*, GtkWidget*);
 extern GtkWidget* view_file_main(char  *);
 extern int close_ui(char *);
 extern gint query_dialog(GtkWidget *, char *, char *);
-extern void choose_file_dialog(AppData *, MainUi *);
+//extern void choose_file_dialog(AppData *, MainUi *);
+//extern void choose_file_dialog(char *, Gtk.FileChooserAction, gchar *, MainUi *);
+extern void choose_file_dialog(char *, int, gchar *, MainUi *);
 
 
 /* Globals */
@@ -125,7 +127,8 @@ void OnDirBrowse(GtkWidget *btn, gpointer *user_data)
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
 
     /* Conversion */
-    choose_file_dialog(app_data, m_ui);
+    //choose_file_dialog(app_data, m_ui);
+    choose_file_dialog("Output Location", GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER, app_data->output_dir, m_ui);
 
     return;
 }  

@@ -80,8 +80,9 @@ void video_select(AppData *user_data, MainUi *m_ui)
 
 /* Browse and select a directory to hold output images */
 
-void output_dir_select(AppData *user_data, MainUi *m_ui)
+void output_dir_select(AppData *app_data, MainUi *m_ui)
 {  
+    //choose_file_dialog("Output Location", GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER, app_data->output_dir);
 
     return;
 }

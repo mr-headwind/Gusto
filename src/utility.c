@@ -60,7 +60,9 @@
 void app_msg(char*, char *, GtkWidget*);
 void info_dialog(GtkWidget *, char *, char *);
 gint query_dialog(GtkWidget *, char *, char *);
-void choose_file_dialog(AppData *, MainUi *);
+void choose_file_dialog(char *, int, gchar *, MainUi *);
+//void choose_file_dialog(char *, Gtk.FileChooserAction, gchar *, MainUi *);
+//void choose_file_dialog(AppData *, MainUi *);
 void get_msg(char*, char*, char*);
 void string_trim(char*);
 void register_window(GtkWidget *);
@@ -193,15 +195,18 @@ gint query_dialog(GtkWidget *window, char *msg, char *opt)
 
 /* Callback - Set capture directory */
 
-void choose_file_dialog(AppData *app_data, MainUi *m_ui)
+//void choose_file_dialog(char *heading, AppData *app_data, MainUi *m_ui)
+//void choose_file_dialog(char *heading, Gtk.FileChooserAction chooser_action, gchar *nm, MainUi *m_ui)
+void choose_file_dialog(char *heading, int chooser_action, gchar *nm, MainUi *m_ui)
 {  
     GtkWidget *dialog;
     gint res;
 
     /* Selection */
-    dialog = gtk_file_chooser_dialog_new ("Output Location",
+    dialog = gtk_file_chooser_dialog_new (heading,
 					  GTK_WINDOW (m_ui->window),
-					  GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER,
+					  chooser_action,
+					  //GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER,
 					  "_Cancel", GTK_RESPONSE_CANCEL,
 					  "_Apply", GTK_RESPONSE_APPLY,
 					  NULL);
@@ -211,6 +216,10 @@ void choose_file_dialog(AppData *app_data, MainUi *m_ui)
     if (res == GTK_RESPONSE_APPLY)
     {
 	GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
+	nm = gtk_file_chooser_get_filename (chooser);
+	    gtk_entry_set_text (GTK_ENTRY (m_ui->out_dir), nm);
+
+	/*
 	app_data->output_dir = gtk_file_chooser_get_filename (chooser);
 
 	if (app_data->output_dir)
@@ -227,6 +236,7 @@ void choose_file_dialog(AppData *app_data, MainUi *m_ui)
 	}
 
 	g_free (app_data->output_dir);
+	*/
     }
 
     gtk_widget_destroy (dialog);
