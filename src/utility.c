@@ -60,9 +60,7 @@
 void app_msg(char*, char *, GtkWidget*);
 void info_dialog(GtkWidget *, char *, char *);
 gint query_dialog(GtkWidget *, char *, char *);
-void choose_file_dialog(char *, int, gchar *, MainUi *);
-//void choose_file_dialog(char *, Gtk.FileChooserAction, gchar *, MainUi *);
-//void choose_file_dialog(AppData *, MainUi *);
+int choose_file_dialog(char *, int, gchar *, MainUi *);
 void get_msg(char*, char*, char*);
 void string_trim(char*);
 void register_window(GtkWidget *);
@@ -193,11 +191,9 @@ gint query_dialog(GtkWidget *window, char *msg, char *opt)
 }
 
 
-/* Callback - Set capture directory */
+/* Callback - Select a file or directory */
 
-//void choose_file_dialog(char *heading, AppData *app_data, MainUi *m_ui)
-//void choose_file_dialog(char *heading, Gtk.FileChooserAction chooser_action, gchar *nm, MainUi *m_ui)
-void choose_file_dialog(char *heading, int chooser_action, gchar *nm, MainUi *m_ui)
+int choose_file_dialog(char *heading, int chooser_action, gchar *nm, MainUi *m_ui)
 {  
     GtkWidget *dialog;
     gint res;
@@ -206,7 +202,6 @@ void choose_file_dialog(char *heading, int chooser_action, gchar *nm, MainUi *m_
     dialog = gtk_file_chooser_dialog_new (heading,
 					  GTK_WINDOW (m_ui->window),
 					  chooser_action,
-					  //GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER,
 					  "_Cancel", GTK_RESPONSE_CANCEL,
 					  "_Apply", GTK_RESPONSE_APPLY,
 					  NULL);
@@ -217,31 +212,11 @@ void choose_file_dialog(char *heading, int chooser_action, gchar *nm, MainUi *m_
     {
 	GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
 	nm = gtk_file_chooser_get_filename (chooser);
-	    gtk_entry_set_text (GTK_ENTRY (m_ui->out_dir), nm);
-
-	/*
-	app_data->output_dir = gtk_file_chooser_get_filename (chooser);
-
-	if (app_data->output_dir)
-	{
-	    gtk_entry_set_text (GTK_ENTRY (m_ui->out_dir), app_data->output_dir);
-
-	    if (! check_dir(app_data->output_dir))
-	    {
-		res = query_dialog(m_ui->window, "Location (%s) does not exist. Create it?", app_data->output_dir);
-
-		if (res == GTK_RESPONSE_YES)
-		    make_dir(app_data->output_dir);
-	    }
-	}
-
-	g_free (app_data->output_dir);
-	*/
     }
 
     gtk_widget_destroy (dialog);
 
-    return;
+    return res;
 }
 
 

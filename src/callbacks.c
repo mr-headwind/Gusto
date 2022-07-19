@@ -108,7 +108,7 @@ void OnVideoBrowse(GtkWidget *btn, gpointer *user_data)
     m_ui = (MainUi *) user_data;
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
 
-    /* Conversion */
+    /* Select video */
     video_select(app_data, m_ui);
 
     return;
@@ -126,9 +126,8 @@ void OnDirBrowse(GtkWidget *btn, gpointer *user_data)
     m_ui = (MainUi *) user_data;
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
 
-    /* Conversion */
-    //choose_file_dialog(app_data, m_ui);
-    choose_file_dialog("Output Location", GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER, app_data->output_dir, m_ui);
+    /* Output directory */
+    output_dir_select(app_data, m_ui);
 
     return;
 }  
