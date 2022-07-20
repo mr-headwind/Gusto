@@ -53,6 +53,7 @@ void output_dir_select(AppData *, MainUi *);
 void set_convert_widgets(AppData *, MainUi *);
 
 extern void app_msg(char*, char *, GtkWidget *);
+int choose_file_dialog(char *, int , gchar **, MainUi *);
 
 
 /* Globals */
@@ -71,10 +72,14 @@ void video_convert(AppData *user_data, MainUi *m_ui)
 
 /* Browse and select a video file to convert */
 
-void video_select(AppData *user_data, MainUi *m_ui)
+void video_select(AppData *app_data, MainUi *m_ui)
 {  
-    choose_file_dialog("Select Video", GTK_FILE_CHOOSER_ACTION_OPEN, app_data->video_fn, m_ui);
-    gtk_entry_set_text (GTK_ENTRY (m_ui->video_fn), app_data->video_fn);
+    gint res;
+
+    res = choose_file_dialog("Select Video", GTK_FILE_CHOOSER_ACTION_OPEN, &(app_data->video_fn), m_ui);
+
+    if (res == GTK_RESPONSE_APPLY)
+	gtk_entry_set_text (GTK_ENTRY (m_ui->fn), app_data->video_fn);
 
     return;
 }
@@ -84,8 +89,12 @@ void video_select(AppData *user_data, MainUi *m_ui)
 
 void output_dir_select(AppData *app_data, MainUi *m_ui)
 {  
-    choose_file_dialog("Output Location", GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER, app_data->output_dir, m_ui);
-    gtk_entry_set_text (GTK_ENTRY (m_ui->out_dir), app_data->output_dir);
+    gint res;
+
+    res = choose_file_dialog("Output Location", GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER, &(app_data->output_dir), m_ui);
+
+    if (res == GTK_RESPONSE_APPLY)
+	gtk_entry_set_text (GTK_ENTRY (m_ui->out_dir), app_data->output_dir);
 
     return;
 }

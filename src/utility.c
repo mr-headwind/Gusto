@@ -60,7 +60,7 @@
 void app_msg(char*, char *, GtkWidget*);
 void info_dialog(GtkWidget *, char *, char *);
 gint query_dialog(GtkWidget *, char *, char *);
-int choose_file_dialog(char *, int, gchar *, MainUi *);
+int choose_file_dialog(char *, int, gchar **, MainUi *);
 void get_msg(char*, char*, char*);
 void string_trim(char*);
 void register_window(GtkWidget *);
@@ -193,7 +193,7 @@ gint query_dialog(GtkWidget *window, char *msg, char *opt)
 
 /* Callback - Select a file or directory */
 
-int choose_file_dialog(char *heading, int chooser_action, gchar *nm, MainUi *m_ui)
+int choose_file_dialog(char *heading, int chooser_action, gchar **nm, MainUi *m_ui)
 {  
     GtkWidget *dialog;
     gint res;
@@ -211,7 +211,7 @@ int choose_file_dialog(char *heading, int chooser_action, gchar *nm, MainUi *m_u
     if (res == GTK_RESPONSE_APPLY)
     {
 	GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
-	nm = gtk_file_chooser_get_filename (chooser);
+	*nm = gtk_file_chooser_get_filename (chooser);
     }
 
     gtk_widget_destroy (dialog);

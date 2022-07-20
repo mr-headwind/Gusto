@@ -64,9 +64,6 @@ extern void app_msg(char*, char*, GtkWidget*);
 extern GtkWidget* view_file_main(char  *);
 extern int close_ui(char *);
 extern gint query_dialog(GtkWidget *, char *, char *);
-//extern void choose_file_dialog(AppData *, MainUi *);
-//extern void choose_file_dialog(char *, Gtk.FileChooserAction, gchar *, MainUi *);
-extern void choose_file_dialog(char *, int, gchar *, MainUi *);
 
 
 /* Globals */
