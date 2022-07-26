@@ -56,6 +56,8 @@ typedef struct _AppData
     char *video_fn;			/* Video file name */
     int interval_type;	    		/* Type of frame conversion (eg. each frame or every n frames / seconds) */
     int frame_interval;	    		/* Interval between frame conversion */
+    int time_start;	    		/* Collect frames for a time interval */
+    int time_duration;	    		/* Time period */
     gchar *output_dir;			/* Directory to hold output image files */
     char *output_prefix;		/* Prefix to use for image file names */
     char *image_type;	    		/* Image type (jpg, png, bmp) */

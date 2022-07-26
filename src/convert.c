@@ -47,10 +47,11 @@
 
 /* Prototypes */
 
-void video_convert(AppData *, MainUi *);
 void video_select(AppData *, MainUi *);
 void output_dir_select(AppData *, MainUi *);
 void set_convert_widgets(AppData *, MainUi *);
+void video_convert(AppData *, MainUi *);
+void get_user_data(AppData *, MainUi *);
 
 extern void app_msg(char*, char *, GtkWidget *);
 int choose_file_dialog(char *, int , gchar **, MainUi *);
@@ -59,15 +60,6 @@ int choose_file_dialog(char *, int , gchar **, MainUi *);
 /* Globals */
 
 static const char *debug_hdr = "DEBUG-convert.c ";
-
-
-/* Set up a gstreamer pipeline and convert frames to images as required */
-
-void video_convert(AppData *user_data, MainUi *m_ui)
-{  
-
-    return;
-}
 
 
 /* Browse and select a video file to convert */
@@ -125,5 +117,62 @@ void set_convert_widgets(AppData *user_data, MainUi *m_ui)
 	gtk_widget_set_visible (m_ui->int_hbox, FALSE);
     }
 
+    return;
+}
+
+
+/* Collect necessary user data and set up a gstreamer pipeline to convert frames to images as required */
+
+void video_convert(AppData *app_data, MainUi *m_ui)
+{  
+    /* Collect user data */
+    get_user_data(app_data, m_ui);
+
+    /* Conversion pipeline */
+
+    return;
+}
+
+
+/* Collect necessary user data */
+
+void get_user_data(AppData *app_data, MainUi *m_ui)
+{  
+    gchar *s;
+
+printf("%s get_user_data 1\n", debug_hdr); fflush(stdout);
+    if (app_data->video_fn[0] == '\0')
+    	app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
+
+    if (app_data->output_dir[0] == '\0')
+    	app_data->output_dir = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->out_dir));
+
+printf("%s get_user_data 2\n", debug_hdr); fflush(stdout);
+    app_data->image_type = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (m_ui->codec_select_cbx));
+
+    app_data->interval_type = gtk_combo_box_get_active (GTK_COMBO_BOX(m_ui->frm_select_cbx));
+
+printf("%s get_user_data 3\n", debug_hdr); fflush(stdout);
+    switch(app_data->interval_type)
+    {
+    	case 0:				// Convert every frame
+	    break;
+	case 1:				// Convert a selection of frames
+	    s = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->frm_interval));
+	    app_data->frame_interval = atoi(s);
+	    break;
+	case 2:				// Convert frames for time period
+	    s = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->video_start));
+	    app_data->time_start = atoi(s);
+	    s = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->duration));
+	    app_data->time_duration = atoi(s);
+	    break;
+	default:
+	    app_msg("MSG0004", "Error: Selection type", m_ui->window);
+	    return;
+	    break;
+    }
+
+printf("%s get_user_data 4\n", debug_hdr); fflush(stdout);
     return;
 }
