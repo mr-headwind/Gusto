@@ -67,11 +67,15 @@ static const char *debug_hdr = "DEBUG-convert.c ";
 void video_select(AppData *app_data, MainUi *m_ui)
 {  
     gint res;
+    char *p;
 
-    res = choose_file_dialog("Select Video", GTK_FILE_CHOOSER_ACTION_OPEN, &(app_data->video_fn), m_ui);
+    res = choose_file_dialog("Select Video", GTK_FILE_CHOOSER_ACTION_OPEN, &p, m_ui);
 
     if (res == GTK_RESPONSE_APPLY)
-	gtk_entry_set_text (GTK_ENTRY (m_ui->fn), app_data->video_fn);
+    {
+	gtk_entry_set_text (GTK_ENTRY (m_ui->fn), p);
+	free(p);
+    }
 
     return;
 }
@@ -141,8 +145,11 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
     gchar *s;
 
 printf("%s get_user_data 1\n", debug_hdr); fflush(stdout);
-    if (app_data->video_fn[0] == '\0')
-    	app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
+    app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
+
+printf("%s get_user_data 1a\n", debug_hdr); fflush(stdout);
+    if (*(app_data->video_fn) == '\0')
+	app_msg("MSG0002", "Video file", m_ui->window);
 
     if (app_data->output_dir[0] == '\0')
     	app_data->output_dir = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->out_dir));
