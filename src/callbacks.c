@@ -78,14 +78,12 @@ static const char *debug_hdr = "DEBUG-callbacks.c ";
 
 void OnConvert(GtkWidget *btn, gpointer *user_data)
 {  
-    GtkWidget *window;
     MainUi *m_ui;
     AppData *app_data;
 
     /* Get data */
-    window = (GtkWidget *) user_data;
-    m_ui = (MainUi *) g_object_get_data (G_OBJECT (window), "ui");
-    app_data = (AppData *) g_object_get_data (G_OBJECT (window), "app_data");
+    m_ui = (MainUi *) user_data;
+    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
 
     /* Conversion */
     video_convert(app_data, m_ui);
@@ -153,6 +151,12 @@ void OnFrameSet(GtkWidget *cbx, gpointer *user_data)
 void OnQuit(GtkWidget *window, gpointer *user_data)
 {  
     /* Close any open windows */
+    GtkWidget *win;
+    win = (GtkWidget *) user_data;
+    MainUi *m_ui;
+    m_ui = (MainUi *) g_object_get_data (G_OBJECT (win), "ui");
+printf("%s OnQuit 1a\n", debug_hdr); fflush(stdout);
+printf("%s OnQuit 1,   fn %s\n", debug_hdr, (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn))); fflush(stdout);
     close_open_ui();
     free_window_reg();
 

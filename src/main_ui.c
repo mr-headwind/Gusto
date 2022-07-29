@@ -307,7 +307,7 @@ void set_button_widgets(MainUi *m_ui)
 
     m_ui->convert_btn = gtk_button_new_with_label("Convert");
     gtk_widget_set_name(m_ui->convert_btn, "button_1");
-    g_signal_connect_swapped(m_ui->convert_btn, "clicked", G_CALLBACK(OnConvert), m_ui->window);
+    g_signal_connect(m_ui->convert_btn, "clicked", G_CALLBACK(OnConvert), m_ui);
     gtk_box_pack_start (GTK_BOX (m_ui->btn_hbox), m_ui->convert_btn, FALSE, FALSE, 0);
 
     m_ui->close_btn = gtk_button_new_with_label("Close");

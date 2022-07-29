@@ -144,13 +144,15 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
 {  
     gchar *s;
 
-printf("%s get_user_data 1\n", debug_hdr); fflush(stdout);
+printf("%s get_user_data 1,   fn %s\n", debug_hdr, (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn))); fflush(stdout);
     app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
 
 printf("%s get_user_data 1a\n", debug_hdr); fflush(stdout);
+/*
     if (*(app_data->video_fn) == '\0')
 	app_msg("MSG0002", "Video file", m_ui->window);
 
+    	*/
     if (app_data->output_dir[0] == '\0')
     	app_data->output_dir = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->out_dir));
 
