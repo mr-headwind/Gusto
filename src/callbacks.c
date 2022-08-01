@@ -151,12 +151,6 @@ void OnFrameSet(GtkWidget *cbx, gpointer *user_data)
 void OnQuit(GtkWidget *window, gpointer *user_data)
 {  
     /* Close any open windows */
-    GtkWidget *win;
-    win = (GtkWidget *) user_data;
-    MainUi *m_ui;
-    m_ui = (MainUi *) g_object_get_data (G_OBJECT (win), "ui");
-printf("%s OnQuit 1a\n", debug_hdr); fflush(stdout);
-printf("%s OnQuit 1,   fn %s\n", debug_hdr, (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn))); fflush(stdout);
     close_open_ui();
     free_window_reg();
 

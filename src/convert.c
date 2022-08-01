@@ -146,22 +146,23 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
 
 printf("%s get_user_data 1,   fn %s\n", debug_hdr, (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn))); fflush(stdout);
     app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
+    app_data->output_dir = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->out_dir));
 
 printf("%s get_user_data 1a\n", debug_hdr); fflush(stdout);
+printf("%s get_user_data 1a   len fn %d\n", debug_hdr, (int) strlen(app_data->video_fn)); fflush(stdout);
+if (*(app_data->video_fn) == '\0')
+    printf("%s get_user_data 1a\n", debug_hdr); fflush(stdout);
 /*
     if (*(app_data->video_fn) == '\0')
 	app_msg("MSG0002", "Video file", m_ui->window);
 
-    	*/
     if (app_data->output_dir[0] == '\0')
-    	app_data->output_dir = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->out_dir));
 
-printf("%s get_user_data 2\n", debug_hdr); fflush(stdout);
+    	*/
     app_data->image_type = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (m_ui->codec_select_cbx));
 
     app_data->interval_type = gtk_combo_box_get_active (GTK_COMBO_BOX(m_ui->frm_select_cbx));
 
-printf("%s get_user_data 3\n", debug_hdr); fflush(stdout);
     switch(app_data->interval_type)
     {
     	case 0:				// Convert every frame
@@ -182,6 +183,5 @@ printf("%s get_user_data 3\n", debug_hdr); fflush(stdout);
 	    break;
     }
 
-printf("%s get_user_data 4\n", debug_hdr); fflush(stdout);
     return;
 }
