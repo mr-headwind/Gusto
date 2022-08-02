@@ -54,6 +54,7 @@ void create_main_view(MainUi *);
 void set_heading_widgets(MainUi *);
 void video_select_widgets(MainUi *);
 void output_dir_widgets(MainUi *);
+void image_prefix_widgets(MainUi *);
 void video_convert_select_widgets(MainUi *);
 void set_button_widgets(MainUi *);
 
@@ -143,6 +144,9 @@ void create_main_view(MainUi *m_ui)
     /* Output directory */
     output_dir_widgets(m_ui);
 
+    /* Output directory */
+    image_prefix_widgets(m_ui);
+
     /* Add frame conversion criteria */
     video_convert_select_widgets(m_ui);
 
@@ -192,6 +196,7 @@ void video_select_widgets(MainUi *m_ui)
     gtk_entry_set_width_chars(GTK_ENTRY (m_ui->fn), 30);
     gtk_entry_set_text(GTK_ENTRY (m_ui->fn), home_dir(m_ui->window));
     gtk_widget_set_margin_left(m_ui->fn, 10);
+    gtk_widget_set_margin_top (m_ui->fn, 5);
 
     m_ui->browse_video_btn = gtk_button_new_with_label("Browse...");
     gtk_widget_set_margin_left(m_ui->browse_video_btn, 10);
@@ -213,11 +218,30 @@ void output_dir_widgets(MainUi *m_ui)
     gtk_entry_set_width_chars(GTK_ENTRY (m_ui->out_dir), 30);
     gtk_entry_set_text(GTK_ENTRY (m_ui->out_dir), home_dir(m_ui->window));
     gtk_widget_set_margin_left(m_ui->out_dir, 10);
+    gtk_widget_set_margin_top (m_ui->out_dir, 5);
 
     m_ui->browse_dir_btn = gtk_button_new_with_label("Browse...");
     gtk_widget_set_margin_left(m_ui->browse_dir_btn, 10);
     gtk_grid_attach(GTK_GRID (m_ui->fn_grid), m_ui->browse_dir_btn, 2, 1, 1, 1);
     g_signal_connect(m_ui->browse_dir_btn, "clicked", G_CALLBACK(OnDirBrowse), (gpointer) m_ui);
+
+    return;
+}
+
+
+/* Image prefix widgets */
+
+void image_prefix_widgets(MainUi *m_ui)
+{  
+    create_label2(&(m_ui->prefix_lbl), "title_4", "Output Prefix", m_ui->fn_grid, 0, 2, 1, 1);
+    gtk_widget_set_halign(m_ui->prefix_lbl, GTK_ALIGN_END);
+
+    create_entry(&(m_ui->img_prefix), "ent_1", m_ui->fn_grid, 1, 2);
+    gtk_entry_set_width_chars(GTK_ENTRY (m_ui->img_prefix), 5);
+    gtk_entry_set_text(GTK_ENTRY (m_ui->img_prefix), "Image-");
+    gtk_widget_set_margin_left(m_ui->img_prefix, 10);
+    gtk_widget_set_margin_right(m_ui->img_prefix, 100);
+    gtk_widget_set_margin_top (m_ui->img_prefix, 5);
 
     return;
 }

@@ -51,6 +51,7 @@ typedef struct _main_ui
     GtkWidget *hdg_lbl, *version_lbl, *hdg_hbox;
     GtkWidget *fn_lbl, *fn, *browse_video_btn, *fn_grid;
     GtkWidget *out_dir_lbl, *out_dir, *browse_dir_btn;
+    GtkWidget *prefix_lbl, *img_prefix;
     GtkWidget *frm_lbl, *frm_select_cbx, *frm_grid;
     GtkWidget *frm_interval_lbl, *frm_interval, *int_hbox;
     GtkWidget *video_start_lbl, *video_start, *duration_lbl, *duration, *time_hbox;

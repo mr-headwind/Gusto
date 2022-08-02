@@ -59,8 +59,8 @@ typedef struct _AppData
     int time_start;	    		/* Collect frames for a time interval */
     int time_duration;	    		/* Time period */
     gchar *output_dir;			/* Directory to hold output image files */
-    char *output_prefix;		/* Prefix to use for image file names */
     char *image_type;	    		/* Image type (jpg, png, bmp) */
+    char *img_prefix;			/* Prefix to use for image file names */
 } AppData;
 
 
