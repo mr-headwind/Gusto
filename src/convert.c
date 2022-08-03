@@ -52,6 +52,7 @@ void output_dir_select(AppData *, MainUi *);
 void set_convert_widgets(AppData *, MainUi *);
 void video_convert(AppData *, MainUi *);
 void get_user_data(AppData *, MainUi *);
+void setup_gst_pipeline(AppData *, MainUi *);
 
 extern void app_msg(char*, char *, GtkWidget *);
 int choose_file_dialog(char *, int , gchar **, MainUi *);
@@ -133,6 +134,7 @@ void video_convert(AppData *app_data, MainUi *m_ui)
     get_user_data(app_data, m_ui);
 
     /* Conversion pipeline */
+    setup_gst_pipeline(app_data, m_ui);
 
     return;
 }
@@ -181,6 +183,25 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
 	    return;
 	    break;
     }
+
+    return;
+}
+
+
+/* 
+    Setup the gst pipeline and start conversion
+
+    ** Conversion pipeline **
+
+                                           /-> | Queue | Videoconvert | Xvimagesink 
+    | Filesrc | -> | Decodebin |-> | Tee |/
+    |         |    |           |         |\
+                                           \-> | Queue | | jpegenc ! multifilesink location=aa%05d.jpg
+
+*/
+
+void setup_gst_pipeline(AppData *app_data, MainUi *m_ui)
+{  
 
     return;
 }

@@ -39,6 +39,7 @@
 #include <string.h>  
 #include <libgen.h>  
 #include <gtk/gtk.h>  
+#include <gst/gst.h>
 #include <main.h>
 #include <user_data.h>
 #include <defs.h>
@@ -74,6 +75,7 @@ int main(int argc, char *argv[])
 
     /* Initialise Gtk */
     gtk_init(&argc, &argv);  
+    gst_init (&argc, &argv);
 
     main_ui(&app_data, &m_ui);
 
