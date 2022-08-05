@@ -40,6 +40,8 @@
 #include <libgen.h>  
 #include <gtk/gtk.h>  
 #include <gdk/gdkkeysyms.h>  
+#include <gst/gst.h>
+#include <gst/video/video-format.h>
 #include <main.h>
 #include <user_data.h>
 #include <defs.h>
@@ -52,7 +54,7 @@ void output_dir_select(AppData *, MainUi *);
 void set_convert_widgets(AppData *, MainUi *);
 void video_convert(AppData *, MainUi *);
 void get_user_data(AppData *, MainUi *);
-void setup_gst_pipeline(AppData *, MainUi *);
+int setup_gst_pipeline(AppData *, MainUi *);
 
 extern void app_msg(char*, char *, GtkWidget *);
 int choose_file_dialog(char *, int , gchar **, MainUi *);
@@ -193,15 +195,89 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
 
     ** Conversion pipeline **
 
-                                           /-> | Queue | Videoconvert | Xvimagesink 
+                                           /-> | Queue | Fakesink 
     | Filesrc | -> | Decodebin |-> | Tee |/
     |         |    |           |         |\
-                                           \-> | Queue | | jpegenc ! multifilesink location=aa%05d.jpg
+                                           \-> | Queue | | Image Encoder | Multifilesink location=xx%05d.(jpg, png, bmp)
 
 */
 
-void setup_gst_pipeline(AppData *app_data, MainUi *m_ui)
+int setup_gst_pipeline(AppData *app_data, MainUi *m_ui)
 {  
+    /* GST setup */
+    if (!set_elements(app_data, m_ui))
+	return FALSE;
 
-    return;
+    /* Link all the viewing elements */
+    if (link_pipeline(app_data, m_ui) == FALSE)
+	return FALSE;
+
+    /* Start conversion */
+    if (start_pipeline(app_data, m_ui, TRUE) == FALSE)
+	return FALSE;
+
+    return TRUE;
+}
+
+
+/* Create pipeline and conversion elements */
+
+int set_elements(AppData *app_data, MainUi *m_ui)
+{
+    memset(&(cam_data->gst_objs), 0, sizeof(app_gst_objects));
+
+    if (! create_element(&(cam_data->gst_objs.v4l2_src), "v4l2src", "v4l2", cam_data, m_ui))
+    	return FALSE;
+
+    if (! create_element(&(cam_data->gst_objs.v_convert), "videoconvert", "v_convert", cam_data, m_ui))
+    	return FALSE;
+
+    //if (! create_element(&(cam_data->gst_objs.v_sink), "xvimagesink", "v_sink", cam_data, m_ui))
+    if (! create_element(&(cam_data->gst_objs.v_sink), "fakesink", "v_sink", cam_data, m_ui))
+    	return FALSE;
+
+    if (cam_data->gst_objs.v_sink == NULL)
+    {
+    	log_msg("SYS9013", "No ximagesink - trying autovideosink...", NULL, NULL);
+
+	if (! create_element(&(cam_data->gst_objs.v_sink), "autovideosink", "v_sink", cam_data, m_ui))
+	    return FALSE;
+    }
+
+    if (! create_element(&(cam_data->gst_objs.v_filter), "capsfilter", "v_filter", cam_data, m_ui))
+    	return FALSE;
+    
+    if (! create_element(&(cam_data->gst_objs.vid_rate), "videorate", "vid_rate", cam_data, m_ui))
+    	return FALSE;
+
+    if (! create_element(&(cam_data->gst_objs.q1), "queue", "block", cam_data, m_ui))
+    	return FALSE;
+
+    /* Create the pipeline */
+    cam_data->pipeline = gst_pipeline_new ("cam_video");
+
+    if (!cam_data->pipeline)
+    {
+	log_msg("CAM0020", NULL, "CAM0020", m_ui->window);
+        return FALSE;
+    }
+
+    /* Set the device source, caps filter and other object properties */
+    g_object_set (cam_data->gst_objs.v4l2_src, "device", cam_data->current_dev, NULL);
+    g_object_set (cam_data->gst_objs.v_sink, "sync", FALSE, NULL);
+    g_object_set (cam_data->gst_objs.v_filter, "caps", cam_data->gst_objs.v_caps, NULL);
+
+    cam_data->gst_objs.blockpad = gst_element_get_static_pad (cam_data->gst_objs.q1, "src");
+
+    /* Build the pipeline - add all the elements */
+    gst_bin_add_many (GST_BIN (cam_data->pipeline), 
+    				cam_data->gst_objs.v4l2_src, 
+    				cam_data->gst_objs.vid_rate, 
+    				cam_data->gst_objs.v_sink, 
+    				cam_data->gst_objs.v_convert, 
+    				cam_data->gst_objs.v_filter, 
+    				cam_data->gst_objs.q1, 
+    				NULL);
+
+    return TRUE;
 }
