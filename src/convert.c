@@ -226,39 +226,28 @@ int set_elements(AppData *app_data, MainUi *m_ui)
 {
     memset(&(cam_data->gst_objs), 0, sizeof(app_gst_objects));
 
-    if (! create_element(&(cam_data->gst_objs.v4l2_src), "v4l2src", "v4l2", cam_data, m_ui))
+    if (! create_element(&(app_data->gst_objs.file_src), "filesrc", "v4l2", app_data, m_ui))
     	return FALSE;
 
-    if (! create_element(&(cam_data->gst_objs.v_convert), "videoconvert", "v_convert", cam_data, m_ui))
+    if (! create_element(&(app_data->gst_objs.v_convert), "videoconvert", "v_convert", app_data, m_ui))
     	return FALSE;
 
     //if (! create_element(&(cam_data->gst_objs.v_sink), "xvimagesink", "v_sink", cam_data, m_ui))
-    if (! create_element(&(cam_data->gst_objs.v_sink), "fakesink", "v_sink", cam_data, m_ui))
+    if (! create_element(&(app_data->gst_objs.v_sink), "fakesink", "v_sink", app_data, m_ui))
     	return FALSE;
 
-    if (cam_data->gst_objs.v_sink == NULL)
-    {
-    	log_msg("SYS9013", "No ximagesink - trying autovideosink...", NULL, NULL);
+    if (app_data->gst_objs.v_sink == NULL)
+	return FALSE;
 
-	if (! create_element(&(cam_data->gst_objs.v_sink), "autovideosink", "v_sink", cam_data, m_ui))
-	    return FALSE;
-    }
-
-    if (! create_element(&(cam_data->gst_objs.v_filter), "capsfilter", "v_filter", cam_data, m_ui))
-    	return FALSE;
-    
-    if (! create_element(&(cam_data->gst_objs.vid_rate), "videorate", "vid_rate", cam_data, m_ui))
-    	return FALSE;
-
-    if (! create_element(&(cam_data->gst_objs.q1), "queue", "block", cam_data, m_ui))
+    if (! create_element(&(app_data->gst_objs.q1), "queue", "block", app_data, m_ui))
     	return FALSE;
 
     /* Create the pipeline */
-    cam_data->pipeline = gst_pipeline_new ("cam_video");
+    app_data->pipeline = gst_pipeline_new ("video_convert");
 
-    if (!cam_data->pipeline)
+    if (!app_data->pipeline)
     {
-	log_msg("CAM0020", NULL, "CAM0020", m_ui->window);
+	app_msg("MSG0009", NULL, m_ui->window);
         return FALSE;
     }
 
@@ -270,14 +259,41 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     cam_data->gst_objs.blockpad = gst_element_get_static_pad (cam_data->gst_objs.q1, "src");
 
     /* Build the pipeline - add all the elements */
-    gst_bin_add_many (GST_BIN (cam_data->pipeline), 
-    				cam_data->gst_objs.v4l2_src, 
-    				cam_data->gst_objs.vid_rate, 
-    				cam_data->gst_objs.v_sink, 
-    				cam_data->gst_objs.v_convert, 
-    				cam_data->gst_objs.v_filter, 
-    				cam_data->gst_objs.q1, 
+    gst_bin_add_many (GST_BIN (app_data->pipeline), 
+    				app_data->gst_objs.v4l2_src, 
+    				app_data->gst_objs.vid_rate, 
+    				app_data->gst_objs.v_sink, 
+    				app_data->gst_objs.v_convert, 
+    				app_data->gst_objs.v_filter, 
+    				app_data->gst_objs.q1, 
     				NULL);
+
+    return TRUE;
+}
+
+
+/* Check the ref count of the element and set up if required */
+
+int create_element(GstElement **element, char *factory_nm, char *nm, CamData *app_data, MainUi *m_ui)
+{
+    int rc;
+
+    if (GST_IS_ELEMENT(*element) == TRUE)
+    {
+	if ((rc = GST_OBJECT_REFCOUNT_VALUE (*element)) > 0)
+	{
+	    //printf("%s Element %s (%s) has a ref count of %d\n", debug_hdr, nm, factory_nm, rc);   // debug
+	    return TRUE;
+	}
+    }
+
+    *element = gst_element_factory_make ((const gchar *) factory_nm, (const gchar *) nm);
+
+    if (! *(element))
+    {
+	log_msg("CAM0020", NULL, "CAM0020", m_ui->window);
+        return FALSE;
+    }
 
     return TRUE;
 }

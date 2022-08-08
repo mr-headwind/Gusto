@@ -110,10 +110,11 @@ static const char *app_messages[][2] =
     { "MSG9006", "Failed to get parent container widget. %s "},
     { "MSG9007", "Failed to find widget. %s "},
     { "MSG9008", "Failed to create ddirectory: %s "},
+    { "MSG9009", "Not all GST elements could be created. "},
     { "MSG9999", "Error - Unknown error message given. "}			// NB - MUST be last
 };
 
-static const int Msg_Count = 16;
+static const int Msg_Count = 17;
 static char *Home;
 static const char *debug_hdr = "DEBUG-utility.c ";
 static GList *open_ui_list_head = NULL;
