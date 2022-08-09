@@ -55,6 +55,8 @@ void set_convert_widgets(AppData *, MainUi *);
 void video_convert(AppData *, MainUi *);
 void get_user_data(AppData *, MainUi *);
 int setup_gst_pipeline(AppData *, MainUi *);
+int set_elements(AppData *, MainUi *);
+int create_element(GstElement **, char *, char *, AppData *, MainUi *);
 
 extern void app_msg(char*, char *, GtkWidget *);
 int choose_file_dialog(char *, int , gchar **, MainUi *);
@@ -224,48 +226,73 @@ int setup_gst_pipeline(AppData *app_data, MainUi *m_ui)
 
 int set_elements(AppData *app_data, MainUi *m_ui)
 {
-    memset(&(cam_data->gst_objs), 0, sizeof(app_gst_objects));
+    const char *codec_selection_arr[] = { "JPG", "PNG", "BMP" };
+    const char *encoder_arr[] = { "jpegenc", "pngenc", "pnmenc" };
+    const int codec_max = 3;
+    int i;
 
-    if (! create_element(&(app_data->gst_objs.file_src), "filesrc", "v4l2", app_data, m_ui))
+    /* Initial */
+    memset(&(app_data->gst_objs), 0, sizeof(app_gst_objects));
+
+    /* Determine which image encoder factory to use (bmp will be special later conversion) */
+    i = 0;
+
+    for(i = 0; i < codec_max; i++)
+    {
+    	if (strcmp(app_data->image_type, codec_selection_arr[i]) == 0)
+	    break;
+    }
+
+    if (i >= codec_max)
+    {
+	app_msg("MSG0001", "Image Type", m_ui->window);
+    	return FALSE;
+    }
+
+    /* Create factories */
+    if (! create_element(&(app_data->gst_objs.file_src), "filesrc", "video", app_data, m_ui))
     	return FALSE;
 
-    if (! create_element(&(app_data->gst_objs.v_convert), "videoconvert", "v_convert", app_data, m_ui))
+    if (! create_element(&(app_data->gst_objs.v_decode), "decodebin", "v_decode", app_data, m_ui))
     	return FALSE;
 
-    //if (! create_element(&(cam_data->gst_objs.v_sink), "xvimagesink", "v_sink", cam_data, m_ui))
-    if (! create_element(&(app_data->gst_objs.v_sink), "fakesink", "v_sink", app_data, m_ui))
+    if (! create_element(&(app_data->gst_objs.tee), "tee", "split", NULL, m_ui))
     	return FALSE;
 
-    if (app_data->gst_objs.v_sink == NULL)
-	return FALSE;
+    if (! create_element(&(app_data->gst_objs.video_queue), "queue", "v_queue", app_data, m_ui))
+    	return FALSE;
 
-    if (! create_element(&(app_data->gst_objs.q1), "queue", "block", app_data, m_ui))
+    if (! create_element(&(app_data->gst_objs.convert_queue), "queue", "c_queue", app_data, m_ui))
+    	return FALSE;
+
+    if (! create_element(&(app_data->gst_objs.fk_sink), "fakesink", "fk_sink", app_data, m_ui))
+    	return FALSE;
+
+    if (! create_element(&(app_data->gst_objs.encoder), "encoder", encoder_arr[i], app_data, m_ui))
+    	return FALSE;
+
+    if (! create_element(&(app_data->gst_objs.mf_sink), "multifilesink", "file_sink", NULL, m_ui))
     	return FALSE;
 
     /* Create the pipeline */
-    app_data->pipeline = gst_pipeline_new ("video_convert");
+    app_data->c_pipeline = gst_pipeline_new ("video_convert");
 
-    if (!app_data->pipeline)
+    if (!app_data->c_pipeline)
     {
 	app_msg("MSG0009", NULL, m_ui->window);
         return FALSE;
     }
 
-    /* Set the device source, caps filter and other object properties */
-    g_object_set (cam_data->gst_objs.v4l2_src, "device", cam_data->current_dev, NULL);
-    g_object_set (cam_data->gst_objs.v_sink, "sync", FALSE, NULL);
-    g_object_set (cam_data->gst_objs.v_filter, "caps", cam_data->gst_objs.v_caps, NULL);
-
-    cam_data->gst_objs.blockpad = gst_element_get_static_pad (cam_data->gst_objs.q1, "src");
-
     /* Build the pipeline - add all the elements */
-    gst_bin_add_many (GST_BIN (app_data->pipeline), 
-    				app_data->gst_objs.v4l2_src, 
-    				app_data->gst_objs.vid_rate, 
-    				app_data->gst_objs.v_sink, 
-    				app_data->gst_objs.v_convert, 
-    				app_data->gst_objs.v_filter, 
-    				app_data->gst_objs.q1, 
+    gst_bin_add_many (GST_BIN (app_data->c_pipeline), 
+    				app_data->gst_objs.file_src, 
+    				app_data->gst_objs.decodebin, 
+    				app_data->gst_objs.tee, 
+    				app_data->gst_objs.video_queue, 
+    				app_data->gst_objs.convert_queue, 
+    				app_data->gst_objs.fk_sink, 
+    				app_data->gst_objs.encoder, 
+    				app_data->gst_objs.mf_sink, 
     				NULL);
 
     return TRUE;
@@ -274,7 +301,7 @@ int set_elements(AppData *app_data, MainUi *m_ui)
 
 /* Check the ref count of the element and set up if required */
 
-int create_element(GstElement **element, char *factory_nm, char *nm, CamData *app_data, MainUi *m_ui)
+int create_element(GstElement **element, char *factory_nm, char *nm, AppData *app_data, MainUi *m_ui)
 {
     int rc;
 
@@ -291,7 +318,7 @@ int create_element(GstElement **element, char *factory_nm, char *nm, CamData *ap
 
     if (! *(element))
     {
-	log_msg("CAM0020", NULL, "CAM0020", m_ui->window);
+	app_msg("MSG0009", NULL, m_ui->window);
         return FALSE;
     }
 

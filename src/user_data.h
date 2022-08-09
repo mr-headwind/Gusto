@@ -46,12 +46,22 @@
 /* Enums */
 
 
+/* Structure to group GST elements */
+
+typedef struct _app_gst_objects
+{
+    GstElement *file_src, *v_decode, *fk_sink, *mf_sink;	
+    GstElement *tee, *video_queue, *convert_queue, *encoder;
+    GstElement *c_pipeline;
+} app_gst_objs;
+
+
 /* Structure to contain all our information, so we can pass it around */
 
 typedef struct _AppData
 {
     //GstElement *pipeline;           	/* Our one and only pipeline */
-    app_gst_objects gst_objs;		/* GST objects for viewing & recording */
+    app_gst_objs gst_objs;		/* GST objects for viewing & recording */
     GstState state;                 	/* Current state of the pipeline */
     char *video_fn;			/* Video file name */
     int interval_type;	    		/* Type of frame conversion (eg. each frame or every n frames / seconds) */
@@ -62,24 +72,3 @@ typedef struct _AppData
     char *image_type;	    		/* Image type (jpg, png, bmp) */
     char *img_prefix;			/* Prefix to use for image file names */
 } AppData;
-
-
-/* Structure to group GST elements */
-
-/*
-*/
-typedef struct _app_gst_objects
-{
-    GstElement *file_src, *vid_rate, *v_filter, *v_convert, *v_sink;	// View only
-    GstElement *tee, *video_queue, *capt_queue, *muxer, *file_sink;	// Fixed capture
-    GstElement *c_convert;						// Fixed capture
-    GstElement *encoder; 						// Encoder capture
-    GstElement *c_filter;						// Caps capture
-    GstElement *q1; 							// Reticule (insertion) related
-    GstPad *tee_capt_pad, *tee_video_pad;
-    GstCaps *v_caps, *c_caps;						
-    GstElement *cairo_overlay, *cairo_convert;				// Cairo elements for reticule
-    GstPad *blockpad;							// Reticule only
-    gulong probe_id;							// Reticule only
-    CairoOverlayState *overlay_state;					// Reticule only
-} app_gst_objs;
