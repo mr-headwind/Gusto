@@ -52,7 +52,6 @@ typedef struct _app_gst_objects
 {
     GstElement *file_src, *v_decode, *fk_sink, *mf_sink;	
     GstElement *tee, *video_queue, *convert_queue, *encoder;
-    GstElement *c_pipeline;
 } app_gst_objs;
 
 
@@ -60,7 +59,7 @@ typedef struct _app_gst_objects
 
 typedef struct _AppData
 {
-    //GstElement *pipeline;           	/* Our one and only pipeline */
+    GstElement *c_pipeline;           	/* Our one and only pipeline */
     app_gst_objs gst_objs;		/* GST objects for viewing & recording */
     GstState state;                 	/* Current state of the pipeline */
     char *video_fn;			/* Video file name */

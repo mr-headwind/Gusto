@@ -41,7 +41,7 @@
 #include <gtk/gtk.h>  
 #include <gdk/gdkkeysyms.h>  
 #include <gst/gst.h>
-#include <gst/video/video-format.h>
+#include <glib.h>
 #include <main.h>
 #include <user_data.h>
 #include <defs.h>
@@ -52,14 +52,19 @@
 void video_select(AppData *, MainUi *);
 void output_dir_select(AppData *, MainUi *);
 void set_convert_widgets(AppData *, MainUi *);
-void video_convert(AppData *, MainUi *);
+int video_convert(AppData *, MainUi *);
 void get_user_data(AppData *, MainUi *);
 int setup_gst_pipeline(AppData *, MainUi *);
 int set_elements(AppData *, MainUi *);
-int create_element(GstElement **, char *, char *, AppData *, MainUi *);
+int link_pipeline(AppData *, MainUi *);
+int start_pipeline(AppData *, MainUi *, int);
+int set_pipeline_state(AppData *, GstState, GtkWidget *);
+int create_element(GstElement **, char *, const char *, AppData *, MainUi *);
+GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
+gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 
 extern void app_msg(char*, char *, GtkWidget *);
-int choose_file_dialog(char *, int , gchar **, MainUi *);
+extern int choose_file_dialog(char *, int , gchar **, MainUi *);
 
 
 /* Globals */
@@ -132,15 +137,24 @@ void set_convert_widgets(AppData *user_data, MainUi *m_ui)
 
 /* Collect necessary user data and set up a gstreamer pipeline to convert frames to images as required */
 
-void video_convert(AppData *app_data, MainUi *m_ui)
+int video_convert(AppData *app_data, MainUi *m_ui)
 {  
     /* Collect user data */
     get_user_data(app_data, m_ui);
 
     /* Conversion pipeline */
-    setup_gst_pipeline(app_data, m_ui);
+    if (setup_gst_pipeline(app_data, m_ui) == FALSE)
+    	return FALSE;
 
-    return;
+    /* Link all the elements */
+    if (link_pipeline(app_data, m_ui) == FALSE)
+	return FALSE;
+
+    /* Start pipeline */
+    if (start_pipeline(app_data, m_ui, TRUE) == FALSE)
+	return FALSE;
+
+    return TRUE;
 }
 
 
@@ -232,7 +246,7 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     int i;
 
     /* Initial */
-    memset(&(app_data->gst_objs), 0, sizeof(app_gst_objects));
+    memset(&(app_data->gst_objs), 0, sizeof(app_gst_objs));
 
     /* Determine which image encoder factory to use (bmp will be special later conversion) */
     i = 0;
@@ -286,7 +300,7 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     /* Build the pipeline - add all the elements */
     gst_bin_add_many (GST_BIN (app_data->c_pipeline), 
     				app_data->gst_objs.file_src, 
-    				app_data->gst_objs.decodebin, 
+    				app_data->gst_objs.v_decode, 
     				app_data->gst_objs.tee, 
     				app_data->gst_objs.video_queue, 
     				app_data->gst_objs.convert_queue, 
@@ -299,9 +313,137 @@ int set_elements(AppData *app_data, MainUi *m_ui)
 }
 
 
+/* Build (link) all the pipeline elements */
+
+int link_pipeline(AppData *app_data, MainUi *m_ui)
+{
+    app_gst_objs *gst_objs;
+
+    /* Convenience pointer */
+    gst_objs = &(app_data->gst_objs);
+
+    /* Link */
+    if (gst_element_link_many (gst_objs->file_src, 
+			       gst_objs->v_decode, 
+			       gst_objs->tee,
+			       gst_objs->video_queue,
+			       gst_objs->convert_queue,
+			       gst_objs->fk_sink,
+			       gst_objs->encoder,
+			       gst_objs->mf_sink,
+			       NULL) != TRUE)
+    {
+	app_msg("MSG9010", NULL, m_ui->window);
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/* Pipeline watch and start */
+
+int start_pipeline(AppData *app_data, MainUi *m_ui, int init)
+{
+    GstBus *bus;
+    guint source_id;
+    char s[100];
+
+    if (init == TRUE)
+    {
+	/* Set up sync handler for setting the xid once the pipeline is started */
+	bus = gst_pipeline_get_bus (GST_PIPELINE (app_data->c_pipeline));
+	gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, NULL, NULL);
+    }
+
+    if (set_pipeline_state(app_data, GST_STATE_PLAYING, m_ui->window) == FALSE)
+        return FALSE;
+
+    if (init == TRUE)
+    {
+	/* Add a bus watch for messages */
+	source_id = gst_bus_add_watch (bus, (GstBusFunc) bus_message_watch, m_ui);
+	gst_object_unref (bus);
+    }
+
+    /* Information status line */
+    sprintf(s, "Converting video to %s images ...", app_data->image_type);
+    gtk_label_set_text (GTK_LABEL (m_ui->status_info), s);
+
+    return TRUE;
+}
+
+
+/* Set pileline state */
+
+int set_pipeline_state(AppData *app_data, GstState state, GtkWidget *window)
+{
+    GstStateChangeReturn ret, ret2;
+    char s[10];
+    GstState chg_state;
+
+    if (! GST_IS_ELEMENT(app_data->c_pipeline))
+    	return -1;
+
+    ret = gst_element_set_state (app_data->c_pipeline, state);
+
+    switch(ret)
+    {
+	case GST_STATE_CHANGE_SUCCESS:
+	case GST_STATE_CHANGE_NO_PREROLL:
+	    ret2 = gst_element_get_state (app_data->c_pipeline, &chg_state, NULL, GST_CLOCK_TIME_NONE);
+
+	    if (chg_state != state)
+	    {
+		app_msg("MSG9011", "Playing", window);
+		return FALSE;
+	    }
+
+	    break;
+
+	case GST_STATE_CHANGE_ASYNC:
+	    break;
+
+	case GST_STATE_CHANGE_FAILURE:
+	    switch (state)
+	    {
+		case GST_STATE_NULL:
+		    strcpy(s, "NULL");
+		    break;
+
+		case GST_STATE_READY:
+		    strcpy(s, "READY");
+		    break;
+
+		case GST_STATE_PAUSED:
+		    strcpy(s, "PAUSED");
+		    break;
+
+		case GST_STATE_PLAYING:
+		    strcpy(s, "PLAYING");
+		    break;
+
+		default:
+		    strcpy(s, "Unknown");
+	    }
+
+	    app_msg("MSG9011", s, window);
+	    return FALSE;
+
+	default:
+	    app_msg("MSG9011", s, window);
+	    return FALSE;
+    }
+
+    app_data->state = state;
+
+    return TRUE;
+}
+
+
 /* Check the ref count of the element and set up if required */
 
-int create_element(GstElement **element, char *factory_nm, char *nm, AppData *app_data, MainUi *m_ui)
+int create_element(GstElement **element, char *factory_nm, const char *nm, AppData *app_data, MainUi *m_ui)
 {
     int rc;
 
