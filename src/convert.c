@@ -41,6 +41,8 @@
 #include <gtk/gtk.h>  
 #include <gdk/gdkkeysyms.h>  
 #include <gst/gst.h>
+#include <gst/video/videooverlay.h>
+#include <gst/video/video-format.h>
 #include <glib.h>
 #include <main.h>
 #include <user_data.h>
@@ -70,6 +72,7 @@ extern int choose_file_dialog(char *, int , gchar **, MainUi *);
 /* Globals */
 
 static const char *debug_hdr = "DEBUG-convert.c ";
+guintptr video_window_handle = 0;
 
 
 /* Browse and select a video file to convert */
@@ -264,6 +267,13 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     }
 
     /* Create factories */
+    app_data->gst_objs.file_src = gst_element_factory_make ("filesrc", "v4l2");
+    if (app_data->gst_objs.file_src == NULL)
+    {
+	printf("%s test factory not null\n", debug_hdr);
+        return FALSE;
+    }
+    
     if (! create_element(&(app_data->gst_objs.file_src), "filesrc", "video", app_data, m_ui))
     	return FALSE;
 
@@ -293,6 +303,7 @@ int set_elements(AppData *app_data, MainUi *m_ui)
 
     if (!app_data->c_pipeline)
     {
+	printf("%s pipeline\n", debug_hdr);
 	app_msg("MSG0009", NULL, m_ui->window);
         return FALSE;
     }
@@ -460,8 +471,180 @@ int create_element(GstElement **element, char *factory_nm, const char *nm, AppDa
 
     if (! *(element))
     {
+	printf("%s element\n", debug_hdr);
 	app_msg("MSG0009", NULL, m_ui->window);
         return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/* Bus watch for the video window handle */
+
+GstBusSyncReply bus_sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+    // Ignore anything but 'prepare-window-handle' element messages
+    if (!gst_is_video_overlay_prepare_window_handle_message (message))
+        return GST_BUS_PASS;
+
+    if (video_window_handle != 0)
+    {
+        //g_print("%s sync reply\n", debug_hdr);
+        GstVideoOverlay *overlay;
+
+        // GST_MESSAGE_SRC (message) will be the video sink element
+        overlay = GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message));
+        gst_video_overlay_set_window_handle (overlay, video_window_handle);
+    }
+    else
+    {
+        g_warning ("Should have obtained video_window_handle by now!");
+    }
+
+    gst_message_unref (message);
+
+    return GST_BUS_DROP;
+}
+
+
+/* Bus message watch */
+
+gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
+{
+    AppData *app_data;
+    MainUi *m_ui;
+    GError *err = NULL;
+    gchar *msg_str = NULL;
+    app_gst_objs *gst_objs;
+
+    /* Get data */
+    m_ui = (MainUi *) user_data;
+    app_data = g_object_get_data (G_OBJECT(m_ui->window), "app_data");
+
+    /* Mainly interested in EOS, but need to be playing first */
+    switch GST_MESSAGE_TYPE (msg)
+    {
+	case GST_MESSAGE_ERROR:
+	    gst_message_parse_error (msg, &err, &msg_str);
+	    sprintf(app_msg_extra, "Error received from element %s: %s\n", 
+	    			   GST_OBJECT_NAME (msg->src), msg_str);
+	    app_msg("MSG9012", "Error", m_ui->window);
+
+	    g_error_free (err);
+	    g_free (msg_str);
+	    break;
+
+	case GST_MESSAGE_WARNING:
+	    gst_message_parse_warning (msg, &err, &msg_str);
+	    sprintf(app_msg_extra, "Warning received from element %s: %s\n", 
+	    			   GST_OBJECT_NAME (msg->src), msg_str);
+	    app_msg("MSG9012", "Warning", m_ui->window);
+
+	    g_error_free (err);
+	    g_free (msg_str);
+	    break;
+
+	case GST_MESSAGE_STATE_CHANGED:
+	    gst_objs = &(app_data->gst_objs);
+
+	case GST_MESSAGE_ASYNC_DONE:
+	    /* Only concerned with pipeline messages at present */
+	    if (GST_MESSAGE_SRC (msg) != GST_OBJECT (app_data->c_pipeline))
+	    	break;
+
+	    GstState curr_state, pend_state;
+	    GstStateChangeReturn ret;
+	    ret = gst_element_get_state (app_data->c_pipeline, &curr_state, &pend_state, GST_CLOCK_TIME_NONE);
+
+	    /* If not already started, start thread to monitor progress */
+	    /*
+	    if (m_ui->thread_init == FALSE)
+	    {
+		if (curr_state)
+		{
+		    if (ret == GST_STATE_CHANGE_SUCCESS && curr_state == GST_STATE_PLAYING)
+		    {
+		    	if (m_ui->duration > 0) 		// Timed capture
+		    	{
+			    if (init_thread(m_ui, &monitor_duration) == FALSE)
+			    	break;
+            		}
+		    	else if (m_ui->no_of_frames > 0) 	// Number of buffers capture
+		    	{
+			    if (init_thread(m_ui, &monitor_frames) == FALSE)
+			    	break;
+            		}
+            		else					// Unlimited
+		    	{
+			    if (init_thread(m_ui, &monitor_unltd) == FALSE)
+			    	break;
+            		}
+		    }
+		}
+	    }
+	    */
+
+	    break;
+
+	    /* Debug
+	    if ((GST_MESSAGE_TYPE (msg)) == GST_MESSAGE_STATE_CHANGED)
+		printf("%s capt 9a state change\n", debug_hdr);
+	    else
+		printf("%s capt 9a async done\n", debug_hdr);
+
+	    if (! curr_state)
+		printf("%s capt 9a curr state null\n", debug_hdr);
+	    else
+	    {
+	    	if (curr_state == GST_STATE_PLAYING)
+		    printf("%s capt 9a curr state playing\n", debug_hdr);
+	    }
+
+	    if (ret == GST_STATE_CHANGE_SUCCESS)
+		printf("%s capt 9a state change success\n", debug_hdr);
+
+	    else if (ret == GST_STATE_CHANGE_ASYNC)
+		printf("%s capt 9a state change success\n", debug_hdr);
+	    else
+		printf("%s capt 9a state change failed\n", debug_hdr);
+
+	    fflush(stdout);
+	    break;
+	    */
+
+	case GST_MESSAGE_EOS:
+	    /* Lock this section of code */
+	    /*
+	    pthread_mutex_lock(&capt_lock_mutex);
+
+	    ** Check the meta data file **
+	    setup_meta(cam_data);
+
+	    ** Prepare to restart normal viewing **
+	    capt_prepare_view(cam_data, m_ui);
+
+	    ** Release the mutex and set capture as done **
+	    m_ui->thread_init = FALSE;
+	    cam_data->mode = CAM_MODE_NONE;
+	    pthread_cond_signal(&capt_eos_cv);
+	    pthread_mutex_unlock(&capt_lock_mutex);
+	    */
+	    break;
+
+	    /* Debug
+	    printf("%s capt 9 EOS\n", debug_hdr);
+	    fflush(stdout);
+	    */
+
+	default:
+	    /*
+	    printf("%s Unknown message name %s type %d\n", debug_hdr, 
+	    						   GST_MESSAGE_SRC_NAME(msg), 
+	    						   GST_MESSAGE_TYPE(msg));
+	    fflush(stdout);
+	    */
+	    break;
     }
 
     return TRUE;

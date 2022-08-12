@@ -113,10 +113,11 @@ static const char *app_messages[][2] =
     { "MSG9009", "Not all GST elements could be created. "},
     { "MSG9010", "GST Pipeline elements could not be linked. "},
     { "MSG9011", "Unable to set the pipeline to the %s state. "},
+    { "MSG9012", "Pipeline Message: %s received. "},
     { "MSG9999", "Error - Unknown error message given. "}			// NB - MUST be last
 };
 
-static const int Msg_Count = 19;
+static const int Msg_Count = 20;
 static char *Home;
 static const char *debug_hdr = "DEBUG-utility.c ";
 static GList *open_ui_list_head = NULL;
