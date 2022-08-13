@@ -61,7 +61,7 @@ int set_elements(AppData *, MainUi *);
 int link_pipeline(AppData *, MainUi *);
 int start_pipeline(AppData *, MainUi *, int);
 int set_pipeline_state(AppData *, GstState, GtkWidget *);
-int create_element(GstElement **, char *, const char *, AppData *, MainUi *);
+int create_element(GstElement **, const char *, const char *, AppData *, MainUi *);
 GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 
@@ -267,13 +267,6 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     }
 
     /* Create factories */
-    app_data->gst_objs.file_src = gst_element_factory_make ("filesrc", "v4l2");
-    if (app_data->gst_objs.file_src == NULL)
-    {
-	printf("%s test factory not null\n", debug_hdr);
-        return FALSE;
-    }
-    
     if (! create_element(&(app_data->gst_objs.file_src), "filesrc", "video", app_data, m_ui))
     	return FALSE;
 
@@ -292,7 +285,7 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     if (! create_element(&(app_data->gst_objs.fk_sink), "fakesink", "fk_sink", app_data, m_ui))
     	return FALSE;
 
-    if (! create_element(&(app_data->gst_objs.encoder), "encoder", encoder_arr[i], app_data, m_ui))
+    if (! create_element(&(app_data->gst_objs.encoder), encoder_arr[i], "encoder", app_data, m_ui))
     	return FALSE;
 
     if (! create_element(&(app_data->gst_objs.mf_sink), "multifilesink", "file_sink", NULL, m_ui))
@@ -303,7 +296,6 @@ int set_elements(AppData *app_data, MainUi *m_ui)
 
     if (!app_data->c_pipeline)
     {
-	printf("%s pipeline\n", debug_hdr);
 	app_msg("MSG0009", NULL, m_ui->window);
         return FALSE;
     }
@@ -337,9 +329,23 @@ int link_pipeline(AppData *app_data, MainUi *m_ui)
     if (gst_element_link_many (gst_objs->file_src, 
 			       gst_objs->v_decode, 
 			       gst_objs->tee,
+			       NULL) != TRUE)
+    {
+	app_msg("MSG9010", NULL, m_ui->window);
+	return FALSE;
+    }
+
+    if (gst_element_link_many (gst_objs->tee, 
 			       gst_objs->video_queue,
-			       gst_objs->convert_queue,
 			       gst_objs->fk_sink,
+			       NULL) != TRUE)
+    {
+	app_msg("MSG9010", NULL, m_ui->window);
+	return FALSE;
+    }
+
+    if (gst_element_link_many (gst_objs->tee, 
+			       gst_objs->convert_queue,
 			       gst_objs->encoder,
 			       gst_objs->mf_sink,
 			       NULL) != TRUE)
@@ -454,7 +460,7 @@ int set_pipeline_state(AppData *app_data, GstState state, GtkWidget *window)
 
 /* Check the ref count of the element and set up if required */
 
-int create_element(GstElement **element, char *factory_nm, const char *nm, AppData *app_data, MainUi *m_ui)
+int create_element(GstElement **element, const char *factory_nm, const char *nm, AppData *app_data, MainUi *m_ui)
 {
     int rc;
 
@@ -469,7 +475,7 @@ int create_element(GstElement **element, char *factory_nm, const char *nm, AppDa
 
     *element = gst_element_factory_make ((const gchar *) factory_nm, (const gchar *) nm);
 
-    if (! *(element))
+    if (! *element)
     {
 	printf("%s element\n", debug_hdr);
 	app_msg("MSG0009", NULL, m_ui->window);
