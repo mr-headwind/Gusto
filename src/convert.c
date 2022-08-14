@@ -67,6 +67,7 @@ gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 
 extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
+extern void strlower(char *, char *);
 
 
 /* Globals */
@@ -247,6 +248,7 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     const char *encoder_arr[] = { "jpegenc", "pngenc", "pnmenc" };
     const int codec_max = 3;
     int i;
+    char *s, lwr[4];
 
     /* Initial */
     memset(&(app_data->gst_objs), 0, sizeof(app_gst_objs));
@@ -299,6 +301,15 @@ int set_elements(AppData *app_data, MainUi *m_ui)
 	app_msg("MSG0009", NULL, m_ui->window);
         return FALSE;
     }
+
+    /* Populate the gst elements as required */
+    g_object_set (app_data->gst_objs.file_src, "location", app_data->video_fn, NULL);
+
+    s = (char *) malloc(strlen(app_data->img_prefix) + 9);
+    strlower((char *) codec_selection_arr[i], lwr);
+    sprintf(s, "%s%%05d.%s", app_data->img_prefix, lwr);
+    g_object_set (app_data->gst_objs.mf_sink, "location", s, "post-messages", TRUE, NULL);
+    free(s);
 
     /* Build the pipeline - add all the elements */
     gst_bin_add_many (GST_BIN (app_data->c_pipeline), 
