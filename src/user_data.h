@@ -50,8 +50,7 @@
 
 typedef struct _app_gst_objects
 {
-    GstElement *file_src, *v_decode, *fk_sink, *mf_sink;	
-    GstElement *tee, *video_queue, *convert_queue, *encoder;
+    GstElement *file_src, *v_decode, *encoder, *mf_sink;
 } app_gst_objs;
 
 

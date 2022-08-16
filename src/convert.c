@@ -215,10 +215,7 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
 
     ** Conversion pipeline **
 
-                                           /-> | Queue | Fakesink 
-    | Filesrc | -> | Decodebin |-> | Tee |/
-    |         |    |           |         |\
-                                           \-> | Queue | | Image Encoder | Multifilesink location=xx%05d.(jpg, png, bmp)
+    | Filesrc | -> | Decodebin |-> | Image Encoder | Multifilesink location=xx%05d.(jpg, png, bmp)
 
 */
 
@@ -275,17 +272,7 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     if (! create_element(&(app_data->gst_objs.v_decode), "decodebin", "v_decode", app_data, m_ui))
     	return FALSE;
 
-    if (! create_element(&(app_data->gst_objs.tee), "tee", "split", NULL, m_ui))
-    	return FALSE;
-
-    if (! create_element(&(app_data->gst_objs.video_queue), "queue", "v_queue", app_data, m_ui))
-    	return FALSE;
-
-    if (! create_element(&(app_data->gst_objs.convert_queue), "queue", "c_queue", app_data, m_ui))
-    	return FALSE;
-
-    if (! create_element(&(app_data->gst_objs.fk_sink), "fakesink", "fk_sink", app_data, m_ui))
-    	return FALSE;
+    g_signal_connect (app_data->gst_objs.v_decode, "pad-added", G_CALLBACK (cb_newpad), app_data);
 
     if (! create_element(&(app_data->gst_objs.encoder), encoder_arr[i], "encoder", app_data, m_ui))
     	return FALSE;
@@ -315,10 +302,6 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     gst_bin_add_many (GST_BIN (app_data->c_pipeline), 
     				app_data->gst_objs.file_src, 
     				app_data->gst_objs.v_decode, 
-    				app_data->gst_objs.tee, 
-    				app_data->gst_objs.video_queue, 
-    				app_data->gst_objs.convert_queue, 
-    				app_data->gst_objs.fk_sink, 
     				app_data->gst_objs.encoder, 
     				app_data->gst_objs.mf_sink, 
     				NULL);
@@ -337,27 +320,13 @@ int link_pipeline(AppData *app_data, MainUi *m_ui)
     gst_objs = &(app_data->gst_objs);
 
     /* Link */
-    if (gst_element_link_many (gst_objs->file_src, 
-			       gst_objs->v_decode, 
-			       gst_objs->tee,
-			       NULL) != TRUE)
+    if (gst_element_link (gst_objs->file_src, gst_objs->v_decode) != TRUE)
     {
 	app_msg("MSG9010", NULL, m_ui->window);
 	return FALSE;
     }
 
-    if (gst_element_link_many (gst_objs->tee, 
-			       gst_objs->video_queue,
-			       gst_objs->fk_sink,
-			       NULL) != TRUE)
-    {
-	app_msg("MSG9010", NULL, m_ui->window);
-	return FALSE;
-    }
-
-    if (gst_element_link_many (gst_objs->tee, 
-			       gst_objs->convert_queue,
-			       gst_objs->encoder,
+    if (gst_element_link_many (gst_objs->encoder,
 			       gst_objs->mf_sink,
 			       NULL) != TRUE)
     {
@@ -365,6 +334,7 @@ int link_pipeline(AppData *app_data, MainUi *m_ui)
 	return FALSE;
     }
 
+printf("%s link pipline\n", debug_hdr);
     return TRUE;
 }
 

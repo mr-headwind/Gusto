@@ -9,3 +9,7 @@ gst-launch-1.0 filesrc location=MVI_0665.MP4 ! decodebin ! tee name="splitter" !
 gst-launch-1.0 filesrc location=MVI_0665.MP4 ! decodebin ! tee name="splitter" ! queue ! videoconvert ! xvimagesink splitter. ! queue ! jpegenc ! multifilesink location=aa%05d.jpg
 
 gst-launch-1.0 filesrc location=MVI_0665.MP4 ! decodebin ! tee name="splitter" ! queue ! videoconvert ! fakesink splitter. ! queue ! jpegenc ! multifilesink location=aa%05d.jpg
+
+gst-launch-1.0 filesrc location=MVI_0665.MP4 ! decodebin ! queue ! jpegenc ! multifilesink location=aa%05d.jpg
+
+gst-launch-1.0 filesrc location=MVI_0665.MP4 ! decodebin ! jpegenc ! multifilesink location=aa%05d.jpg
