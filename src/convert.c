@@ -56,6 +56,7 @@ void output_dir_select(AppData *, MainUi *);
 void set_convert_widgets(AppData *, MainUi *);
 int video_convert(AppData *, MainUi *);
 void get_user_data(AppData *, MainUi *);
+static void cb_newpad (GstElement *, GstPad *, gpointer);
 int setup_gst_pipeline(AppData *, MainUi *);
 int set_elements(AppData *, MainUi *);
 int link_pipeline(AppData *, MainUi *);
@@ -210,6 +211,33 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
 }
 
 
+/* Callback for decoder - dynamic linking to next element in pipeline */
+
+static void cb_newpad (GstElement *decodebin, GstPad *pad, gpointer user_data)
+{
+    GstCaps *caps;
+    GstStructure *str;
+    GstPad *encoder_pad;
+    AppData *app_data;
+
+    /* Initial */
+    app_data = (AppData *) user_data;
+
+    /* Only link once */
+    encoder_pad = gst_element_get_static_pad (app_data->gst_objs.encoder, "sink");
+
+    if (GST_PAD_IS_LINKED (encoder_pad))
+    {
+	g_object_unref (encoder_pad);
+	return;
+    }
+
+    /* Link and continue pipeline */
+    gst_pad_link (pad, encoder_pad);
+    g_object_unref (encoder_pad);
+}
+
+
 /* 
     Setup the gst pipeline and start conversion
 
@@ -223,14 +251,6 @@ int setup_gst_pipeline(AppData *app_data, MainUi *m_ui)
 {  
     /* GST setup */
     if (!set_elements(app_data, m_ui))
-	return FALSE;
-
-    /* Link all the viewing elements */
-    if (link_pipeline(app_data, m_ui) == FALSE)
-	return FALSE;
-
-    /* Start conversion */
-    if (start_pipeline(app_data, m_ui, TRUE) == FALSE)
 	return FALSE;
 
     return TRUE;
@@ -326,15 +346,13 @@ int link_pipeline(AppData *app_data, MainUi *m_ui)
 	return FALSE;
     }
 
-    if (gst_element_link_many (gst_objs->encoder,
-			       gst_objs->mf_sink,
-			       NULL) != TRUE)
+    if (gst_element_link (gst_objs->encoder, gst_objs->mf_sink) != TRUE)
     {
 	app_msg("MSG9010", NULL, m_ui->window);
 	return FALSE;
     }
 
-printf("%s link pipline\n", debug_hdr);
+printf("%s link pipeline\n", debug_hdr);
     return TRUE;
 }
 
