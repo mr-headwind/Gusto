@@ -312,9 +312,9 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     /* Populate the gst elements as required */
     g_object_set (app_data->gst_objs.file_src, "location", app_data->video_fn, NULL);
 
-    s = (char *) malloc(strlen(app_data->img_prefix) + 9);
+    s = (char *) malloc(strlen(app_data->output_dir) + strlen(app_data->img_prefix) + 10);
     strlower((char *) codec_selection_arr[i], lwr);
-    sprintf(s, "%s%%05d.%s", app_data->img_prefix, lwr);
+    sprintf(s, "%s/%s%%05d.%s", app_data->output_dir, app_data->img_prefix, lwr);
     g_object_set (app_data->gst_objs.mf_sink, "location", s, "post-messages", TRUE, NULL);
     free(s);
 
@@ -635,6 +635,10 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    pthread_cond_signal(&capt_eos_cv);
 	    pthread_mutex_unlock(&capt_lock_mutex);
 	    */
+	    if (set_pipeline_state(app_data, GST_STATE_NULL, m_ui->window) == FALSE)
+		return FALSE;
+
+	    gst_object_unref (app_data->c_pipeline);
 	    break;
 
 	    /* Debug
