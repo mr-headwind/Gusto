@@ -57,6 +57,7 @@ void set_convert_widgets(AppData *, MainUi *);
 int video_convert(AppData *, MainUi *);
 void get_user_data(AppData *, MainUi *);
 static void cb_newpad (GstElement *, GstPad *, gpointer);
+int get_video_data(AppData *app_data, MainUi *m_ui);
 int setup_gst_pipeline(AppData *, MainUi *);
 int set_elements(AppData *, MainUi *);
 int link_pipeline(AppData *, MainUi *);
@@ -69,6 +70,15 @@ gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
 extern void strlower(char *, char *);
+
+
+/* Typedefs */
+
+typedef struct _VideoData
+{
+    GstDiscoverer *discoverer;
+    GMainLoop *loop;
+} VideoData;
 
 
 /* Globals */
@@ -146,6 +156,10 @@ int video_convert(AppData *app_data, MainUi *m_ui)
 {  
     /* Collect user data */
     get_user_data(app_data, m_ui);
+
+    /* Get video data */
+    if (get_video_data(app_data, m_ui) == FALSE)
+    	return FALSE;
 
     /* Conversion pipeline */
     if (setup_gst_pipeline(app_data, m_ui) == FALSE)
@@ -655,6 +669,55 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    */
 	    break;
     }
+
+    return TRUE;
+}
+
+
+/* Determine video information */
+
+int get_video_data(AppData *app_data, MainUi *m_ui)
+{  
+    VideoData vdata;
+    GError *err = NULL;
+
+    /* Initial */
+    memset (&vdata, 0, sizeof (vdata));
+
+    /* Instantiate the Discoverer */
+    data.discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
+
+    if (!data.discoverer)
+    {
+	g_print ("Error creating discoverer instance: %s\n", err->message);
+	g_clear_error (&err);
+	return -1;
+    }
+
+  /* Connect to the interesting signals */
+  g_signal_connect (data.discoverer, "discovered", G_CALLBACK (on_discovered_cb), &data);
+  g_signal_connect (data.discoverer, "finished", G_CALLBACK (on_finished_cb), &data);
+
+  /* Start the discoverer process (nothing to do yet) */
+  gst_discoverer_start (data.discoverer);
+
+  /* Add a request to process asynchronously the URI passed through the command line */
+  if (!gst_discoverer_discover_uri_async (data.discoverer, uri)) {
+    g_print ("Failed to start discovering URI '%s'\n", uri);
+    g_object_unref (data.discoverer);
+    return -1;
+  }
+
+  /* Create a GLib Main Loop and set it to run, so we can wait for the signals */
+  data.loop = g_main_loop_new (NULL, FALSE);
+  g_main_loop_run (data.loop);
+
+  /* Stop the discoverer process */
+  gst_discoverer_stop (data.discoverer);
+
+  /* Free resources */
+  g_object_unref (data.discoverer);
+  g_main_loop_unref (data.loop);
 
     return TRUE;
 }

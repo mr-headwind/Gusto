@@ -69,4 +69,8 @@ typedef struct _AppData
     gchar *output_dir;			/* Directory to hold output image files */
     char *image_type;	    		/* Image type (jpg, png, bmp) */
     char *img_prefix;			/* Prefix to use for image file names */
+
+    guint framerate_denom;		/* Frame rate demoninator */
+    guint framerate_num;		/* Frame rate numerator */
+    GstClockTime video_duration;	/* Video length in nanoseconds */
 } AppData;
