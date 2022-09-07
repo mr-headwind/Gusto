@@ -77,7 +77,6 @@ extern void strlower(char *, char *);
 typedef struct _VideoData
 {
     GstDiscoverer *discoverer;
-    GMainLoop *loop;
 } VideoData;
 
 
@@ -694,30 +693,117 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
 	return -1;
     }
 
-  /* Connect to the interesting signals */
-  g_signal_connect (data.discoverer, "discovered", G_CALLBACK (on_discovered_cb), &data);
-  g_signal_connect (data.discoverer, "finished", G_CALLBACK (on_finished_cb), &data);
+    /* Connect to the interesting signals */
+    g_signal_connect (data.discoverer, "discovered", G_CALLBACK (on_discovered_cb), &data);
 
-  /* Start the discoverer process (nothing to do yet) */
-  gst_discoverer_start (data.discoverer);
+    /* Start the discoverer process (nothing to do yet) */
+    gst_discoverer_start (data.discoverer);
 
-  /* Add a request to process asynchronously the URI passed through the command line */
-  if (!gst_discoverer_discover_uri_async (data.discoverer, uri)) {
-    g_print ("Failed to start discovering URI '%s'\n", uri);
+    /* Add a request to process asynchronously the URI passed through the command line */
+    if (!gst_discoverer_discover_uri_async (data.discoverer, uri))
+    {
+	g_print ("Failed to start discovering URI '%s'\n", uri);
+	g_object_unref (data.discoverer);
+	return -1;
+    }
+
+    /* Stop the discoverer process */
+    gst_discoverer_stop (data.discoverer);
+
+    /* Free resources */
     g_object_unref (data.discoverer);
-    return -1;
-  }
-
-  /* Create a GLib Main Loop and set it to run, so we can wait for the signals */
-  data.loop = g_main_loop_new (NULL, FALSE);
-  g_main_loop_run (data.loop);
-
-  /* Stop the discoverer process */
-  gst_discoverer_stop (data.discoverer);
-
-  /* Free resources */
-  g_object_unref (data.discoverer);
-  g_main_loop_unref (data.loop);
 
     return TRUE;
+}
+
+
+/* This function is called every time the discoverer has information regarding
+ * one of the URIs we provided.*/
+static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info, GError *err, CustomData *data) {
+  GstDiscovererResult result;
+  const gchar *uri;
+  const GstTagList *tags;
+  GstDiscovererStreamInfo *sinfo;
+
+  uri = gst_discoverer_info_get_uri (info);
+  result = gst_discoverer_info_get_result (info);
+  switch (result) {
+    case GST_DISCOVERER_URI_INVALID:
+      g_print ("Invalid URI '%s'\n", uri);
+      break;
+    case GST_DISCOVERER_ERROR:
+      g_print ("Discoverer error: %s\n", err->message);
+      break;
+    case GST_DISCOVERER_TIMEOUT:
+      g_print ("Timeout\n");
+      break;
+    case GST_DISCOVERER_BUSY:
+      g_print ("Busy\n");
+      break;
+    case GST_DISCOVERER_MISSING_PLUGINS:{
+      const GstStructure *s;
+      gchar *str;
+
+      s = gst_discoverer_info_get_misc (info);
+      str = gst_structure_to_string (s);
+
+      g_print ("Missing plugins: %s\n", str);
+      g_free (str);
+      break;
+    }
+    case GST_DISCOVERER_OK:
+      g_print ("Discovered '%s'\n", uri);
+      break;
+  }
+
+  if (result != GST_DISCOVERER_OK) {
+    g_printerr ("This URI cannot be played\n");
+    return;
+  }
+
+  /* If we got no error, show the retrieved information */
+
+  g_print ("\nDuration: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
+
+  tags = gst_discoverer_info_get_tags (info);
+  if (tags) {
+    g_print ("Tags:\n");
+    gst_tag_list_foreach (tags, print_tag_foreach, GINT_TO_POINTER (1));
+  }
+
+  g_print ("Seekable: %s\n", (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
+
+  g_print ("\n");
+
+  sinfo = gst_discoverer_info_get_stream_info (info);
+  if (!sinfo)
+    return;
+
+  g_print ("Stream information:\n");
+
+  print_topology (sinfo, 1);
+
+  gst_discoverer_stream_info_unref (sinfo);
+
+  g_print ("\n");
+
+
+  /* Get frame rate */
+  guint v_denom, v_num;
+  const GstDiscovererVideoInfo *vinfo;
+  GList *v_info_gl;
+
+  v_info_gl = gst_discoverer_info_get_video_streams (info);
+  g_print ("list length: %d\n", g_list_length(v_info_gl));
+
+  if (v_info_gl)
+    if (g_list_length(v_info_gl) == 1)
+    {
+      vinfo = (GstDiscovererVideoInfo *) v_info_gl->data;
+      v_denom = gst_discoverer_video_info_get_framerate_denom (vinfo);
+      v_num = gst_discoverer_video_info_get_framerate_num (vinfo);
+      g_print ("Video stream:  frame rate %u : %u \n", v_denom, v_num);
+    }
+
+  gst_discoverer_stream_info_list_free (v_info_gl);
 }
