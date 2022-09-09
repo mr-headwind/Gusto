@@ -56,7 +56,6 @@ void output_dir_select(AppData *, MainUi *);
 void set_convert_widgets(AppData *, MainUi *);
 int video_convert(AppData *, MainUi *);
 void get_user_data(AppData *, MainUi *);
-static void cb_newpad (GstElement *, GstPad *, gpointer);
 int get_video_data(AppData *app_data, MainUi *m_ui);
 int setup_gst_pipeline(AppData *, MainUi *);
 int set_elements(AppData *, MainUi *);
@@ -66,6 +65,8 @@ int set_pipeline_state(AppData *, GstState, GtkWidget *);
 int create_element(GstElement **, const char *, const char *, AppData *, MainUi *);
 GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
+static void cb_newpad (GstElement *, GstPad *, gpointer);
+static void on_discovered_cb (GstDiscoverer *, GstDiscovererInfo *, GError *, CustomData *);
 
 extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
@@ -224,33 +225,6 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
 }
 
 
-/* Callback for decoder - dynamic linking to next element in pipeline */
-
-static void cb_newpad (GstElement *decodebin, GstPad *pad, gpointer user_data)
-{
-    GstCaps *caps;
-    GstStructure *str;
-    GstPad *encoder_pad;
-    AppData *app_data;
-
-    /* Initial */
-    app_data = (AppData *) user_data;
-
-    /* Only link once */
-    encoder_pad = gst_element_get_static_pad (app_data->gst_objs.encoder, "sink");
-
-    if (GST_PAD_IS_LINKED (encoder_pad))
-    {
-	g_object_unref (encoder_pad);
-	return;
-    }
-
-    /* Link and continue pipeline */
-    gst_pad_link (pad, encoder_pad);
-    g_object_unref (encoder_pad);
-}
-
-
 /* 
     Setup the gst pipeline and start conversion
 
@@ -365,7 +339,6 @@ int link_pipeline(AppData *app_data, MainUi *m_ui)
 	return FALSE;
     }
 
-printf("%s link pipeline\n", debug_hdr);
     return TRUE;
 }
 
@@ -717,49 +690,83 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
 }
 
 
-/* This function is called every time the discoverer has information regarding
- * one of the URIs we provided.*/
-static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info, GError *err, CustomData *data) {
-  GstDiscovererResult result;
-  const gchar *uri;
-  const GstTagList *tags;
-  GstDiscovererStreamInfo *sinfo;
+/***** CALLBACKS *****/
 
-  uri = gst_discoverer_info_get_uri (info);
-  result = gst_discoverer_info_get_result (info);
-  switch (result) {
-    case GST_DISCOVERER_URI_INVALID:
-      g_print ("Invalid URI '%s'\n", uri);
-      break;
-    case GST_DISCOVERER_ERROR:
-      g_print ("Discoverer error: %s\n", err->message);
-      break;
-    case GST_DISCOVERER_TIMEOUT:
-      g_print ("Timeout\n");
-      break;
-    case GST_DISCOVERER_BUSY:
-      g_print ("Busy\n");
-      break;
-    case GST_DISCOVERER_MISSING_PLUGINS:{
-      const GstStructure *s;
-      gchar *str;
 
-      s = gst_discoverer_info_get_misc (info);
-      str = gst_structure_to_string (s);
+/* Callback for decoder - dynamic linking to next element in pipeline */
 
-      g_print ("Missing plugins: %s\n", str);
-      g_free (str);
-      break;
+static void cb_newpad (GstElement *decodebin, GstPad *pad, gpointer user_data)
+{
+    GstCaps *caps;
+    GstStructure *str;
+    GstPad *encoder_pad;
+    AppData *app_data;
+
+    /* Initial */
+    app_data = (AppData *) user_data;
+
+    /* Only link once */
+    encoder_pad = gst_element_get_static_pad (app_data->gst_objs.encoder, "sink");
+
+    if (GST_PAD_IS_LINKED (encoder_pad))
+    {
+	g_object_unref (encoder_pad);
+	return;
     }
-    case GST_DISCOVERER_OK:
-      g_print ("Discovered '%s'\n", uri);
-      break;
-  }
 
-  if (result != GST_DISCOVERER_OK) {
-    g_printerr ("This URI cannot be played\n");
-    return;
-  }
+    /* Link and continue pipeline */
+    gst_pad_link (pad, encoder_pad);
+    g_object_unref (encoder_pad);
+}
+
+
+/* Callback for Discoverer - Called every time the discoverer has information regarding the URIs we selected. */
+
+static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info, GError *err, CustomData *data)
+{
+    GstDiscovererResult result;
+    const gchar *uri;
+    const GstTagList *tags;
+    GstDiscovererStreamInfo *sinfo;
+
+    uri = gst_discoverer_info_get_uri (info);
+    result = gst_discoverer_info_get_result (info);
+
+    switch (result)
+    {
+	case GST_DISCOVERER_URI_INVALID:
+	    g_print ("Invalid URI '%s'\n", uri);
+	    break;
+	case GST_DISCOVERER_ERROR:
+	    g_print ("Discoverer error: %s\n", err->message);
+	    break;
+	case GST_DISCOVERER_TIMEOUT:
+	    g_print ("Timeout\n");
+	    break;
+	case GST_DISCOVERER_BUSY:
+	    g_print ("Busy\n");
+	    break;
+	case GST_DISCOVERER_MISSING_PLUGINS:
+	    const GstStructure *s;
+	    gchar *str;
+
+	    s = gst_discoverer_info_get_misc (info);
+	    str = gst_structure_to_string (s);
+
+	    g_print ("Missing plugins: %s\n", str);
+	    g_free (str);
+	    break;
+
+	case GST_DISCOVERER_OK:
+	    g_print ("Discovered '%s'\n", uri);
+	    break;
+    }
+
+    if (result != GST_DISCOVERER_OK)
+    {
+	g_printerr ("This URI cannot be played\n");
+	return;
+    }
 
   /* If we got no error, show the retrieved information */
 
@@ -772,7 +779,6 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
   }
 
   g_print ("Seekable: %s\n", (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
-
   g_print ("\n");
 
   sinfo = gst_discoverer_info_get_stream_info (info);
@@ -786,7 +792,6 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
   gst_discoverer_stream_info_unref (sinfo);
 
   g_print ("\n");
-
 
   /* Get frame rate */
   guint v_denom, v_num;
