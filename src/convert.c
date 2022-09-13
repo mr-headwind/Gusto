@@ -75,11 +75,6 @@ extern void strlower(char *, char *);
 
 /* Typedefs */
 
-typedef struct _VideoData
-{
-    GstDiscoverer *discoverer;
-} VideoData;
-
 
 /* Globals */
 
@@ -650,41 +645,44 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 
 int get_video_data(AppData *app_data, MainUi *m_ui)
 {  
-    VideoData vdata;
     GError *err = NULL;
-
-    /* Initial */
-    memset (&vdata, 0, sizeof (vdata));
+    char *uri;
 
     /* Instantiate the Discoverer */
-    data.discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
+    app_data->discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
 
-    if (!data.discoverer)
+    if (!app_data->discoverer)
     {
-	g_print ("Error creating discoverer instance: %s\n", err->message);
+	sprintf(app_msg_extra, "Error: %s\n", err->message);
 	g_clear_error (&err);
-	return -1;
+	app_msg("MSG9013", NULL, m_ui->window);
+	return FALSE;
     }
 
     /* Connect to the interesting signals */
-    g_signal_connect (data.discoverer, "discovered", G_CALLBACK (on_discovered_cb), &data);
+    g_signal_connect (app_data->discoverer, "discovered", G_CALLBACK (on_discovered_cb), m_ui);
 
     /* Start the discoverer process (nothing to do yet) */
-    gst_discoverer_start (data.discoverer);
+    gst_discoverer_start (app->data->discoverer);
 
     /* Add a request to process asynchronously the URI passed through the command line */
-    if (!gst_discoverer_discover_uri_async (data.discoverer, uri))
+    uri = (char *) malloc(strlen(app_data->video_fn) + 8);
+    sprintf(uri, "file://%s", app_data->video_fn);
+
+    if (!gst_discoverer_discover_uri_async (app->data->discoverer, uri))
     {
-	g_print ("Failed to start discovering URI '%s'\n", uri);
-	g_object_unref (data.discoverer);
-	return -1;
+	app_msg("MSG9014", uri, m_ui->window);
+	g_object_unref (app->data->discoverer);
+	free(uri);
+	return FALSE;
     }
 
     /* Stop the discoverer process */
-    gst_discoverer_stop (data.discoverer);
+    gst_discoverer_stop (app->data->discoverer);
 
     /* Free resources */
-    g_object_unref (data.discoverer);
+    free(uri);
+    g_object_unref (app->data->discoverer);
 
     return TRUE;
 }
@@ -720,31 +718,37 @@ static void cb_newpad (GstElement *decodebin, GstPad *pad, gpointer user_data)
 }
 
 
-/* Callback for Discoverer - Called every time the discoverer has information regarding the URIs we selected. */
+/* Callback for Discoverer - Called every time the discoverer has information regarding the video selected */
 
-static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info, GError *err, CustomData *data)
+static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info, GError *err, gpointer *data)
 {
+    MainUi *m_ui;
+    AppData *app_data;
     GstDiscovererResult result;
     const gchar *uri;
     const GstTagList *tags;
     GstDiscovererStreamInfo *sinfo;
 
+    m_ui = (MainUi *) data;
+    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
     uri = gst_discoverer_info_get_uri (info);
     result = gst_discoverer_info_get_result (info);
 
     switch (result)
     {
 	case GST_DISCOVERER_URI_INVALID:
-	    g_print ("Invalid URI '%s'\n", uri);
+	    sprintf(app_msg_extra, "URI: %s\n", uri);
+	    app_msg("MSG9015", "Invalid URI", m_ui->window);
 	    break;
 	case GST_DISCOVERER_ERROR:
-	    g_print ("Discoverer error: %s\n", err->message);
+	    sprintf(app_msg_extra, "Err: %s\n", err->message);
+	    app_msg("MSG9015", "Discoverer error", m_ui->window);
 	    break;
 	case GST_DISCOVERER_TIMEOUT:
-	    g_print ("Timeout\n");
+	    app_msg("MSG9015", "Timeout", m_ui->window);
 	    break;
 	case GST_DISCOVERER_BUSY:
-	    g_print ("Busy\n");
+	    app_msg("MSG9015", "Busy", m_ui->window);
 	    break;
 	case GST_DISCOVERER_MISSING_PLUGINS:
 	    const GstStructure *s;
@@ -753,18 +757,18 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 	    s = gst_discoverer_info_get_misc (info);
 	    str = gst_structure_to_string (s);
 
-	    g_print ("Missing plugins: %s\n", str);
+	    sprintf(app_msg_extra, "Plugins: %s\n", str);
 	    g_free (str);
+	    app_msg("MSG9015", "Missing plugins", m_ui->window);
 	    break;
 
 	case GST_DISCOVERER_OK:
-	    g_print ("Discovered '%s'\n", uri);
 	    break;
     }
 
     if (result != GST_DISCOVERER_OK)
     {
-	g_printerr ("This URI cannot be played\n");
+	app_msg("MSG9016", uri, m_ui->window);
 	return;
     }
 

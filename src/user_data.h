@@ -73,4 +73,5 @@ typedef struct _AppData
     guint framerate_denom;		/* Frame rate demoninator */
     guint framerate_num;		/* Frame rate numerator */
     GstClockTime video_duration;	/* Video length in nanoseconds */
+    GstDiscoverer *discoverer;
 } AppData;
