@@ -726,8 +726,10 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     AppData *app_data;
     GstDiscovererResult result;
     const gchar *uri;
-    const GstTagList *tags;
-    GstDiscovererStreamInfo *sinfo;
+    guint v_denom, v_num;
+    const GstDiscovererVideoInfo *vinfo;
+    GList *v_info_gl;
+
 
     m_ui = (MainUi *) data;
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
@@ -772,47 +774,21 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 	return;
     }
 
-  /* If we got no error, show the retrieved information */
+    /* Save relevant details - duration, seekable, frame rate */
+    app_data->video_duration =  gst_discoverer_info_get_duration (info);
+    g_print ("\nDuration: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
 
-  g_print ("\nDuration: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
+    app_data->seekable = gst_discoverer_info_get_seekable (info);
 
-  tags = gst_discoverer_info_get_tags (info);
-  if (tags) {
-    g_print ("Tags:\n");
-    gst_tag_list_foreach (tags, print_tag_foreach, GINT_TO_POINTER (1));
-  }
+    v_info_gl = gst_discoverer_info_get_video_streams (info);
 
-  g_print ("Seekable: %s\n", (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
-  g_print ("\n");
+    if (v_info_gl)
+	if (g_list_length(v_info_gl) == 1)
+	{
+	    vinfo = (GstDiscovererVideoInfo *) v_info_gl->data;
+	    app_data->fr_denom = gst_discoverer_video_info_get_framerate_denom (vinfo);
+	    app_data->fr_num = gst_discoverer_video_info_get_framerate_num (vinfo);
+	}
 
-  sinfo = gst_discoverer_info_get_stream_info (info);
-  if (!sinfo)
-    return;
-
-  g_print ("Stream information:\n");
-
-  print_topology (sinfo, 1);
-
-  gst_discoverer_stream_info_unref (sinfo);
-
-  g_print ("\n");
-
-  /* Get frame rate */
-  guint v_denom, v_num;
-  const GstDiscovererVideoInfo *vinfo;
-  GList *v_info_gl;
-
-  v_info_gl = gst_discoverer_info_get_video_streams (info);
-  g_print ("list length: %d\n", g_list_length(v_info_gl));
-
-  if (v_info_gl)
-    if (g_list_length(v_info_gl) == 1)
-    {
-      vinfo = (GstDiscovererVideoInfo *) v_info_gl->data;
-      v_denom = gst_discoverer_video_info_get_framerate_denom (vinfo);
-      v_num = gst_discoverer_video_info_get_framerate_num (vinfo);
-      g_print ("Video stream:  frame rate %u : %u \n", v_denom, v_num);
-    }
-
-  gst_discoverer_stream_info_list_free (v_info_gl);
+    gst_discoverer_stream_info_list_free (v_info_gl);
 }

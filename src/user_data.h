@@ -70,8 +70,10 @@ typedef struct _AppData
     char *image_type;	    		/* Image type (jpg, png, bmp) */
     char *img_prefix;			/* Prefix to use for image file names */
 
-    guint framerate_denom;		/* Frame rate demoninator */
-    guint framerate_num;		/* Frame rate numerator */
+    guint fr_denom;			/* Frame rate demoninator */
+    guint fr_num;			/* Frame rate numerator */
+    gboolean seekable;			/* Is video seekable */
     GstClockTime video_duration;	/* Video length in nanoseconds */
+    char *fmt_duration;			/* String duration */
     GstDiscoverer *discoverer;
 } AppData;
