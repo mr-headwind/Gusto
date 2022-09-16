@@ -21,7 +21,7 @@ CFLAGS=-I. `pkg-config --cflags gtk+-3.0 gstreamer-1.0`
 CFLAGS2=-Wno-deprecated-declarations
 DEPS = defs.h main.h user_data.h version.h
 OBJ = gusto.o callbacks.o main_ui.o utility.o convert.o css.o
-LIBS = `pkg-config --libs gtk+-3.0 gstreamer-1.0 gstreamer-video-1.0 libpng`
+LIBS = `pkg-config --libs gtk+-3.0 gstreamer-1.0 gstreamer-video-1.0 gstreamer-pbutils-1.0 libpng`
 LIBS2 = -ljpeg -lpthread
 
 %.o: %.c $(DEPS)

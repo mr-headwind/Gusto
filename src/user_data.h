@@ -41,6 +41,7 @@
 #include <linux/videodev2.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/pbutils/pbutils.h>
 
 
 /* Enums */

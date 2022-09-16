@@ -43,6 +43,7 @@
 #include <gst/gst.h>
 #include <gst/video/videooverlay.h>
 #include <gst/video/video-format.h>
+#include <gst/pbutils/pbutils.h>
 #include <glib.h>
 #include <main.h>
 #include <user_data.h>
@@ -66,7 +67,7 @@ int create_element(GstElement **, const char *, const char *, AppData *, MainUi 
 GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 static void cb_newpad (GstElement *, GstPad *, gpointer);
-static void on_discovered_cb (GstDiscoverer *, GstDiscovererInfo *, GError *, CustomData *);
+static void on_discovered_cb (GstDiscoverer *, GstDiscovererInfo *, GError *, gpointer *);
 
 extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
@@ -663,26 +664,26 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
     g_signal_connect (app_data->discoverer, "discovered", G_CALLBACK (on_discovered_cb), m_ui);
 
     /* Start the discoverer process (nothing to do yet) */
-    gst_discoverer_start (app->data->discoverer);
+    gst_discoverer_start (app_data->discoverer);
 
     /* Add a request to process asynchronously the URI passed through the command line */
     uri = (char *) malloc(strlen(app_data->video_fn) + 8);
     sprintf(uri, "file://%s", app_data->video_fn);
 
-    if (!gst_discoverer_discover_uri_async (app->data->discoverer, uri))
+    if (!gst_discoverer_discover_uri_async (app_data->discoverer, uri))
     {
 	app_msg("MSG9014", uri, m_ui->window);
-	g_object_unref (app->data->discoverer);
+	g_object_unref (app_data->discoverer);
 	free(uri);
 	return FALSE;
     }
 
     /* Stop the discoverer process */
-    gst_discoverer_stop (app->data->discoverer);
+    gst_discoverer_stop (app_data->discoverer);
 
     /* Free resources */
     free(uri);
-    g_object_unref (app->data->discoverer);
+    g_object_unref (app_data->discoverer);
 
     return TRUE;
 }
@@ -729,6 +730,7 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     guint v_denom, v_num;
     const GstDiscovererVideoInfo *vinfo;
     GList *v_info_gl;
+    int len;
 
 
     m_ui = (MainUi *) data;
@@ -739,20 +741,29 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     switch (result)
     {
 	case GST_DISCOVERER_URI_INVALID:
+	{
 	    sprintf(app_msg_extra, "URI: %s\n", uri);
 	    app_msg("MSG9015", "Invalid URI", m_ui->window);
 	    break;
+	}
 	case GST_DISCOVERER_ERROR:
+	{
 	    sprintf(app_msg_extra, "Err: %s\n", err->message);
 	    app_msg("MSG9015", "Discoverer error", m_ui->window);
 	    break;
+	}
 	case GST_DISCOVERER_TIMEOUT:
+	{
 	    app_msg("MSG9015", "Timeout", m_ui->window);
 	    break;
+	}
 	case GST_DISCOVERER_BUSY:
+	{
 	    app_msg("MSG9015", "Busy", m_ui->window);
 	    break;
+	}
 	case GST_DISCOVERER_MISSING_PLUGINS:
+	{
 	    const GstStructure *s;
 	    gchar *str;
 
@@ -763,6 +774,7 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 	    g_free (str);
 	    app_msg("MSG9015", "Missing plugins", m_ui->window);
 	    break;
+	}
 
 	case GST_DISCOVERER_OK:
 	    break;
@@ -770,13 +782,15 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 
     if (result != GST_DISCOVERER_OK)
     {
-	app_msg("MSG9016", uri, m_ui->window);
+	app_msg("MSG9016", (char *) uri, m_ui->window);
 	return;
     }
 
     /* Save relevant details - duration, seekable, frame rate */
     app_data->video_duration =  gst_discoverer_info_get_duration (info);
-    g_print ("\nDuration: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
+    printf ("%" GST_TIME_FORMAT "%n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)), &len);
+    app_data->fmt_duration =  (char *) malloc(len + 1);
+    sprintf (app_data->fmt_duration, "%" GST_TIME_FORMAT "", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
 
     app_data->seekable = gst_discoverer_info_get_seekable (info);
 
