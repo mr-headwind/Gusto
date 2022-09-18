@@ -96,6 +96,11 @@ void video_select(AppData *app_data, MainUi *m_ui)
     {
 	gtk_entry_set_text (GTK_ENTRY (m_ui->fn), p);
 	free(p);
+
+	/* Get video data */
+	if (get_video_data(app_data, m_ui) == FALSE)
+	    return FALSE;
+
     }
 
     return;
@@ -152,10 +157,6 @@ int video_convert(AppData *app_data, MainUi *m_ui)
 {  
     /* Collect user data */
     get_user_data(app_data, m_ui);
-
-    /* Get video data */
-    if (get_video_data(app_data, m_ui) == FALSE)
-    	return FALSE;
 
     /* Conversion pipeline */
     if (setup_gst_pipeline(app_data, m_ui) == FALSE)
@@ -657,6 +658,7 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
 	sprintf(app_msg_extra, "Error: %s\n", err->message);
 	g_clear_error (&err);
 	app_msg("MSG9013", NULL, m_ui->window);
+	gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9013)");
 	return FALSE;
     }
 
@@ -675,6 +677,7 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
 	app_msg("MSG9014", uri, m_ui->window);
 	g_object_unref (app_data->discoverer);
 	free(uri);
+	gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9014)");
 	return FALSE;
     }
 
@@ -730,7 +733,8 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     guint v_denom, v_num;
     const GstDiscovererVideoInfo *vinfo;
     GList *v_info_gl;
-    int len;
+    int len, no_of_frames;
+    char *s;
 
 
     m_ui = (MainUi *) data;
@@ -744,22 +748,26 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 	{
 	    sprintf(app_msg_extra, "URI: %s\n", uri);
 	    app_msg("MSG9015", "Invalid URI", m_ui->window);
+	    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9015)");
 	    break;
 	}
 	case GST_DISCOVERER_ERROR:
 	{
 	    sprintf(app_msg_extra, "Err: %s\n", err->message);
 	    app_msg("MSG9015", "Discoverer error", m_ui->window);
+	    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9015)");
 	    break;
 	}
 	case GST_DISCOVERER_TIMEOUT:
 	{
 	    app_msg("MSG9015", "Timeout", m_ui->window);
+	    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9015)");
 	    break;
 	}
 	case GST_DISCOVERER_BUSY:
 	{
 	    app_msg("MSG9015", "Busy", m_ui->window);
+	    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9015)");
 	    break;
 	}
 	case GST_DISCOVERER_MISSING_PLUGINS:
@@ -773,6 +781,7 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 	    sprintf(app_msg_extra, "Plugins: %s\n", str);
 	    g_free (str);
 	    app_msg("MSG9015", "Missing plugins", m_ui->window);
+	    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9015)");
 	    break;
 	}
 
@@ -783,15 +792,11 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     if (result != GST_DISCOVERER_OK)
     {
 	app_msg("MSG9016", (char *) uri, m_ui->window);
+	gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9016)");
 	return;
     }
 
     /* Save relevant details - duration, seekable, frame rate */
-    app_data->video_duration =  gst_discoverer_info_get_duration (info);
-    printf ("%" GST_TIME_FORMAT "%n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)), &len);
-    app_data->fmt_duration =  (char *) malloc(len + 1);
-    sprintf (app_data->fmt_duration, "%" GST_TIME_FORMAT "", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
-
     app_data->seekable = gst_discoverer_info_get_seekable (info);
 
     v_info_gl = gst_discoverer_info_get_video_streams (info);
@@ -805,4 +810,15 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 	}
 
     gst_discoverer_stream_info_list_free (v_info_gl);
+
+    app_data->video_duration =  gst_discoverer_info_get_duration (info);
+    printf ("%" GST_TIME_FORMAT "%n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)), &len);
+    app_data->fmt_duration =  (char *) malloc(len + 1);
+    sprintf (app_data->fmt_duration, "%" GST_TIME_FORMAT "", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
+
+    no_of_frames = ((app_data->video_duration / 1000000000) / app_data->fr_num;   // ????
+    s = (char *) malloc(len + 50);
+    sprintf(s, "Video duration: %s  (Approx. %d frames)", app_data->fmt_duration, no_of_frames);
+    gtk_label_set_text(GTK_LABEL (m_ui->status_info), s);
+    free(s);
 }
