@@ -97,10 +97,6 @@ void video_select(AppData *app_data, MainUi *m_ui)
     {
 	gtk_entry_set_text (GTK_ENTRY (m_ui->fn), p);
 	free(p);
-	app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
-
-	if (*(app_data->video_fn) == '\0')
-	    app_msg("MSG0002", "Video file", m_ui->window);
 
 	/* Get video data */
 	if (get_video_data(app_data, m_ui) == FALSE)
@@ -653,6 +649,15 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
 {  
     GError *err = NULL;
     char *uri;
+
+    /* Initial */
+    app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
+
+    if (*(app_data->video_fn) == '\0')
+    {
+	app_msg("MSG0002", "Video file", m_ui->window);
+	return FALSE;
+    }
 
 printf("get_video_data 1\n"); fflush(stdout);
     /* Instantiate the Discoverer */

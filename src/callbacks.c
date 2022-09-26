@@ -49,6 +49,7 @@
 void OnConvert(GtkWidget*, gpointer *);
 void OnVideoBrowse(GtkWidget*, gpointer *);
 void OnDirBrowse(GtkWidget*, gpointer *);
+gboolean OnVideo(GtkWidget*, GdkEventFocus, gpointer *);
 void OnFrameSet(GtkWidget *, gpointer *);
 void OnQuit(GtkWidget*, gpointer *);
 
@@ -57,6 +58,7 @@ extern void video_select(AppData *, MainUi *);
 extern void output_dir_select(AppData *, MainUi *);
 extern void set_convert_widgets(AppData *, MainUi *);
 extern void video_convert(AppData *, MainUi *);
+extern int get_video_data(AppData *, MainUi *);
 extern void free_window_reg();
 extern void close_open_ui();
 extern int is_ui_reg(char *, int);
@@ -125,6 +127,29 @@ void OnDirBrowse(GtkWidget *btn, gpointer *user_data)
     output_dir_select(app_data, m_ui);
 
     return;
+}  
+
+
+/* Callback - Focus out on Video filename being entered */
+
+gboolean OnVideo(GtkWidget *fn, GdkEventFocus ev, gpointer *user_data)
+{  
+    MainUi *m_ui;
+    AppData *app_data;
+
+printf("%s OnVideo get_video_data 1\n", debug_hdr); fflush(stdout);
+    /* Get data */
+    m_ui = (MainUi *) user_data;
+printf("%s OnVideo get_video_data 1a\n", debug_hdr); fflush(stdout);
+
+printf("%s OnVideo get_video_data 1b\n", debug_hdr); fflush(stdout);
+    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
+
+    /* Video information */
+printf("%s OnVideo get_video_data 2\n", debug_hdr); fflush(stdout);
+    get_video_data(app_data, m_ui);
+
+    return TRUE;
 }  
 
 
