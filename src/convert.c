@@ -68,7 +68,7 @@ int create_element(GstElement **, const char *, const char *, AppData *, MainUi 
 GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 static void cb_newpad (GstElement *, GstPad *, gpointer);
-static void on_discovered_cb (GstDiscoverer *, GstDiscovererInfo *, GError *, gpointer *);
+static void on_discovered_cb (GstDiscoverer *, GstDiscovererInfo *, GError *, gpointer);
 
 extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
@@ -742,7 +742,7 @@ static void cb_newpad (GstElement *decodebin, GstPad *pad, gpointer user_data)
 
 /* Callback for Discoverer - Called every time the discoverer has information regarding the video selected */
 
-static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info, GError *err, gpointer *data)
+static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info, GError *err, gpointer data)
 {
     MainUi *m_ui;
     AppData *app_data;
