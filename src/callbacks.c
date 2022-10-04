@@ -49,7 +49,8 @@
 void OnConvert(GtkWidget*, gpointer);
 void OnVideoBrowse(GtkWidget*, gpointer);
 void OnDirBrowse(GtkWidget*, gpointer);
-gboolean OnVideo(GtkWidget*, GdkEventFocus, gpointer);
+gboolean OnVideo(GtkWidget*, GdkEvent *, gpointer);
+//gboolean OnVideo(GtkWidget*, GdkEventFocus, gpointer);
 //gboolean OnVideo(gpointer, GdkEventFocus ev, GtkWidget *);
 void OnFrameSet(GtkWidget *, gpointer);
 void OnQuit(GtkWidget*, gpointer);
@@ -134,7 +135,8 @@ printf("%s OnDirBrowse 1  m_ui is %p   user_data is %p\n", debug_hdr, (void *) m
 
 /* Callback - Focus out on Video filename being entered */
 
-gboolean OnVideo(GtkWidget *fn, GdkEventFocus ev, gpointer user_data)
+gboolean OnVideo(GtkWidget *fn, GdkEvent *ev, gpointer user_data)
+//gboolean OnVideo(GtkWidget *fn, GdkEventFocus ev, gpointer user_data)
 //gboolean OnVideo(gpointer user_data, GdkEventFocus ev, GtkWidget *fn)
 {  
     MainUi *m_ui;
