@@ -70,9 +70,8 @@ GtkWidget * debug_cntr(GtkWidget *);
 extern void app_msg(char*, char *, GtkWidget *);
 extern void OnVideoBrowse(GtkWidget*, gpointer);
 extern void OnDirBrowse(GtkWidget*, gpointer);
+extern gboolean OnVideoIn(GtkWidget*, GdkEvent *, gpointer);
 extern gboolean OnVideo(GtkWidget*, GdkEvent *, gpointer);
-//extern gboolean OnVideo(GtkWidget*, GdkEventFocus, gpointer);
-//extern gboolean OnVideo(gpointer, GdkEventFocus, GtkWidget *);
 extern void OnFrameSet(GtkWidget*, gpointer);
 extern void OnConvert(GtkWidget*, gpointer);
 extern void OnQuit(GtkWidget*, gpointer);
@@ -200,8 +199,8 @@ void video_select_widgets(MainUi *m_ui)
     gtk_entry_set_text(GTK_ENTRY (m_ui->fn), home_dir(m_ui->window));
     gtk_widget_set_margin_left(m_ui->fn, 10);
     gtk_widget_set_margin_top (m_ui->fn, 5);
+    g_signal_connect(G_OBJECT (m_ui->fn), "focus-in-event", G_CALLBACK(OnVideoIn), m_ui);  
     g_signal_connect(G_OBJECT (m_ui->fn), "focus-out-event", G_CALLBACK(OnVideo), m_ui);  
-    //g_signal_connect_swapped(m_ui->fn, "focus-out-event", G_CALLBACK(OnVideo), (gpointer) m_ui);  
 printf("%s video_select_widgets 1  m_ui is %p  fn is %p\n", debug_hdr, (void *) m_ui, (void *) m_ui->fn); fflush(stdout);
 
     m_ui->browse_video_btn = gtk_button_new_with_label("Browse...");

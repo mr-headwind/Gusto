@@ -49,9 +49,8 @@
 void OnConvert(GtkWidget*, gpointer);
 void OnVideoBrowse(GtkWidget*, gpointer);
 void OnDirBrowse(GtkWidget*, gpointer);
+gboolean OnVideoIn(GtkWidget*, GdkEvent *, gpointer);
 gboolean OnVideo(GtkWidget*, GdkEvent *, gpointer);
-//gboolean OnVideo(GtkWidget*, GdkEventFocus, gpointer);
-//gboolean OnVideo(gpointer, GdkEventFocus ev, GtkWidget *);
 void OnFrameSet(GtkWidget *, gpointer);
 void OnQuit(GtkWidget*, gpointer);
 
@@ -127,17 +126,33 @@ void OnDirBrowse(GtkWidget *btn, gpointer user_data)
 
     /* Output directory */
     output_dir_select(app_data, m_ui);
-printf("%s OnDirBrowse 1  m_ui is %p   user_data is %p\n", debug_hdr, (void *) m_ui, user_data); fflush(stdout);
 
     return;
+}  
+
+
+/* Callback - Focus in on Video filename - save to check for change on focus out */
+
+gboolean OnVideoIn(GtkWidget *fn, GdkEvent *ev, gpointer user_data)
+{  
+    MainUi *m_ui;
+    AppData *app_data;
+
+    /* Get data */
+    m_ui = (MainUi *) user_data;
+    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
+
+    /* Save temporary copy of contents */
+    app_data->video_fn_tmp = (char *) malloc(strlen(gtk_entry_get_text(GTK_ENTRY (m_ui->fn))) + 1);
+    strcpy(app_data->video_fn_tmp, gtk_entry_get_text(GTK_ENTRY (m_ui->fn)));
+
+    return FALSE;
 }  
 
 
 /* Callback - Focus out on Video filename being entered */
 
 gboolean OnVideo(GtkWidget *fn, GdkEvent *ev, gpointer user_data)
-//gboolean OnVideo(GtkWidget *fn, GdkEventFocus ev, gpointer user_data)
-//gboolean OnVideo(gpointer user_data, GdkEventFocus ev, GtkWidget *fn)
 {  
     MainUi *m_ui;
     AppData *app_data;
@@ -147,13 +162,18 @@ printf("%s OnVideo 1\n", debug_hdr); fflush(stdout);
     m_ui = (MainUi *) user_data;
 printf("%s OnVideo 1a\n", debug_hdr); fflush(stdout);
 printf("%s OnVideo 1aa  m_ui is %p   user_data is %p\n", debug_hdr, (void *) m_ui, user_data); fflush(stdout);
-printf("%s OnVideo 1aaa  fn is %p   ev is %p\n", debug_hdr, (void *) fn, &ev); fflush(stdout);
 
-printf("%s OnVideo 1b\n", debug_hdr); fflush(stdout);
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
 
-if (GTK_IS_WIDGET (fn))
-printf("%s OnVideo 1c\n", debug_hdr); fflush(stdout);
+    /* Check for changes */
+    if (strcmp(app_data->video_fn_tmp, gtk_entry_get_text(GTK_ENTRY (m_ui->fn))) == 0)
+    {
+    	free(app_data->video_fn_tmp);
+    	return FALSE;
+    }
+    
+    free(app_data->video_fn_tmp);
+
     /* Video information */
 printf("%s OnVideo 2\n", debug_hdr); fflush(stdout);
     get_video_data(app_data, m_ui);
