@@ -201,7 +201,6 @@ void video_select_widgets(MainUi *m_ui)
     gtk_widget_set_margin_top (m_ui->fn, 5);
     g_signal_connect(G_OBJECT (m_ui->fn), "focus-in-event", G_CALLBACK(OnVideoIn), m_ui);  
     g_signal_connect(G_OBJECT (m_ui->fn), "focus-out-event", G_CALLBACK(OnVideo), m_ui);  
-printf("%s video_select_widgets 1  m_ui is %p  fn is %p\n", debug_hdr, (void *) m_ui, (void *) m_ui->fn); fflush(stdout);
 
     m_ui->browse_video_btn = gtk_button_new_with_label("Browse...");
     gtk_widget_set_margin_left(m_ui->browse_video_btn, 10);

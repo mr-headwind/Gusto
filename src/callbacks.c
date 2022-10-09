@@ -157,11 +157,8 @@ gboolean OnVideo(GtkWidget *fn, GdkEvent *ev, gpointer user_data)
     MainUi *m_ui;
     AppData *app_data;
 
-printf("%s OnVideo 1\n", debug_hdr); fflush(stdout);
     /* Get data */
     m_ui = (MainUi *) user_data;
-printf("%s OnVideo 1a\n", debug_hdr); fflush(stdout);
-printf("%s OnVideo 1aa  m_ui is %p   user_data is %p\n", debug_hdr, (void *) m_ui, user_data); fflush(stdout);
 
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
 
@@ -175,10 +172,8 @@ printf("%s OnVideo 1aa  m_ui is %p   user_data is %p\n", debug_hdr, (void *) m_u
     free(app_data->video_fn_tmp);
 
     /* Video information */
-printf("%s OnVideo 2\n", debug_hdr); fflush(stdout);
     get_video_data(app_data, m_ui);
 
-printf("%s OnVideo 3\n", debug_hdr); fflush(stdout);
     return FALSE;
 }  
 

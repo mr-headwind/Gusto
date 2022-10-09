@@ -825,8 +825,8 @@ printf("on_discovered_cb 3\n"); fflush(stdout);
 	if (g_list_length(v_info_gl) == 1)
 	{
 	    vinfo = (GstDiscovererVideoInfo *) v_info_gl->data;
-	    app_data->fr_denom = gst_discoverer_video_info_get_framerate_denom (vinfo);
 	    app_data->fr_num = gst_discoverer_video_info_get_framerate_num (vinfo);
+	    app_data->fr_denom = gst_discoverer_video_info_get_framerate_denom (vinfo);
 	}
 printf("on_discovered_cb 4\n"); fflush(stdout);
 
@@ -845,5 +845,6 @@ printf("on_discovered_cb 6\n"); fflush(stdout);
     sprintf(s, "Video duration: %s  (Approx. %d frames)", app_data->fmt_duration, no_of_frames);
     gtk_label_set_text(GTK_LABEL (m_ui->status_info), s);
     free(s);
-printf("on_discovered_cb 7\n"); fflush(stdout);
+printf("on_discovered_cb 7   seekable %d\nduration %s\nrate %u:%u\n", app_data->seekable, app_data->fmt_duration,
+					app_data->fr_num, app_data->fr_denom); fflush(stdout);
 }
