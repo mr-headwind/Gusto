@@ -69,6 +69,9 @@ GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 static void cb_newpad (GstElement *, GstPad *, gpointer);
 static void on_discovered_cb (GstDiscoverer *, GstDiscovererInfo *, GError *, gpointer);
+static void on_finished_cb (GstDiscoverer *, gpointer);
+static void on_source_cb (GstDiscoverer *, GstElement *, gpointer);
+static void on_start_cb (GstDiscoverer *, gpointer);
 
 extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
@@ -649,6 +652,7 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
 {  
     GError *err = NULL;
     char *uri;
+    GMainLoop *loop;
 
     /* Initial */
     app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
@@ -676,6 +680,9 @@ printf("get_video_data 2\n"); fflush(stdout);
 printf("get_video_data 3\n"); fflush(stdout);
     /* Connect to the interesting signals */
     g_signal_connect (app_data->discoverer, "discovered", G_CALLBACK (on_discovered_cb), m_ui);
+    g_signal_connect (app_data->discoverer, "finished", G_CALLBACK (on_finished_cb), m_ui);
+    g_signal_connect (app_data->discoverer, "source-setup", G_CALLBACK (on_source_cb), m_ui);
+    g_signal_connect (app_data->discoverer, "starting", G_CALLBACK (on_start_cb), m_ui);
 
 printf("get_video_data 4\n"); fflush(stdout);
     /* Start the discoverer process (nothing to do yet) */
@@ -696,6 +703,9 @@ printf("get_video_data 5\n"); fflush(stdout);
 	return FALSE;
     }
 
+    loop = g_main_loop_new (NULL, FALSE);
+    g_main_loop_run (loop);
+
 printf("get_video_data 6\n"); fflush(stdout);
     /* Stop the discoverer process */
     gst_discoverer_stop (app_data->discoverer);
@@ -704,6 +714,7 @@ printf("get_video_data 7\n"); fflush(stdout);
     /* Free resources */
     free(uri);
     g_object_unref (app_data->discoverer);
+    g_main_loop_unref (loop);
 
 printf("get_video_data 8\n"); fflush(stdout);
     return TRUE;
@@ -847,4 +858,18 @@ printf("on_discovered_cb 6\n"); fflush(stdout);
     free(s);
 printf("on_discovered_cb 7   seekable %d\nduration %s\nrate %u:%u\n", app_data->seekable, app_data->fmt_duration,
 					app_data->fr_num, app_data->fr_denom); fflush(stdout);
+}
+
+
+static void on_start_cb (GstDiscoverer *discoverer, gpointer data)
+{
+printf("on_start_cb 1\n"); fflush(stdout);
+}
+static void on_finished_cb (GstDiscoverer *discoverer, gpointer data)
+{
+printf("on_finished_cb 1\n"); fflush(stdout);
+}
+static void on_source_cb (GstDiscoverer *discoverer, GstElement *elem, gpointer data)
+{
+printf("on_source_cb 1\n"); fflush(stdout);
 }
