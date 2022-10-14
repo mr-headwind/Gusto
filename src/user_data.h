@@ -78,4 +78,6 @@ typedef struct _AppData
     GstClockTime video_duration;	/* Video length in nanoseconds */
     char *fmt_duration;			/* String duration */
     GstDiscoverer *discoverer;
+
+    GMainLoop *loop;
 } AppData;

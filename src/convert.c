@@ -69,9 +69,8 @@ GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 static void cb_newpad (GstElement *, GstPad *, gpointer);
 static void on_discovered_cb (GstDiscoverer *, GstDiscovererInfo *, GError *, gpointer);
-static void on_finished_cb (GstDiscoverer *, gpointer);
-static void on_source_cb (GstDiscoverer *, GstElement *, gpointer);
 static void on_start_cb (GstDiscoverer *, gpointer);
+static void on_finished_cb (GstDiscoverer *, gpointer);
 
 extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
@@ -652,7 +651,6 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
 {  
     GError *err = NULL;
     char *uri;
-    GMainLoop *loop;
 
     /* Initial */
     app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
@@ -663,11 +661,9 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
 	return FALSE;
     }
 
-printf("get_video_data 1\n"); fflush(stdout);
     /* Instantiate the Discoverer */
     app_data->discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
 
-printf("get_video_data 2\n"); fflush(stdout);
     if (!app_data->discoverer)
     {
 	sprintf(app_msg_extra, "Error: %s\n", err->message);
@@ -677,23 +673,18 @@ printf("get_video_data 2\n"); fflush(stdout);
 	return FALSE;
     }
 
-printf("get_video_data 3\n"); fflush(stdout);
     /* Connect to the interesting signals */
     g_signal_connect (app_data->discoverer, "discovered", G_CALLBACK (on_discovered_cb), m_ui);
     g_signal_connect (app_data->discoverer, "finished", G_CALLBACK (on_finished_cb), m_ui);
-    g_signal_connect (app_data->discoverer, "source-setup", G_CALLBACK (on_source_cb), m_ui);
     g_signal_connect (app_data->discoverer, "starting", G_CALLBACK (on_start_cb), m_ui);
 
-printf("get_video_data 4\n"); fflush(stdout);
     /* Start the discoverer process (nothing to do yet) */
     gst_discoverer_start (app_data->discoverer);
 
-printf("get_video_data 4a\n"); fflush(stdout);
     /* Add a request to process asynchronously the URI passed through the command line */
     uri = (char *) malloc(strlen(app_data->video_fn) + 8);
     sprintf(uri, "file://%s", app_data->video_fn);
 
-printf("get_video_data 5\n"); fflush(stdout);
     if (!gst_discoverer_discover_uri_async (app_data->discoverer, uri))
     {
 	app_msg("MSG9014", uri, m_ui->window);
@@ -703,20 +694,17 @@ printf("get_video_data 5\n"); fflush(stdout);
 	return FALSE;
     }
 
-    loop = g_main_loop_new (NULL, FALSE);
-    g_main_loop_run (loop);
+    app_data->loop = g_main_loop_new (NULL, FALSE);
+    g_main_loop_run (app_data->loop);
 
-printf("get_video_data 6\n"); fflush(stdout);
     /* Stop the discoverer process */
     gst_discoverer_stop (app_data->discoverer);
 
-printf("get_video_data 7\n"); fflush(stdout);
     /* Free resources */
     free(uri);
     g_object_unref (app_data->discoverer);
-    g_main_loop_unref (loop);
+    //g_main_loop_unref (app_data->loop);
 
-printf("get_video_data 8\n"); fflush(stdout);
     return TRUE;
 }
 
@@ -762,10 +750,10 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     guint v_denom, v_num;
     const GstDiscovererVideoInfo *vinfo;
     GList *v_info_gl;
-    int len, no_of_frames;
+    int len;
+    guint no_of_frames;
     char *s;
 
-printf("on_discovered_cb 1\n"); fflush(stdout);
     m_ui = (MainUi *) data;
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
     uri = gst_discoverer_info_get_uri (info);
@@ -815,7 +803,6 @@ printf("on_discovered_cb 1\n"); fflush(stdout);
 	}
 
 	case GST_DISCOVERER_OK:
-printf("on_discovered_cb 2\n"); fflush(stdout);
 	    break;
     }
 
@@ -826,7 +813,6 @@ printf("on_discovered_cb 2\n"); fflush(stdout);
 	return;
     }
 
-printf("on_discovered_cb 3\n"); fflush(stdout);
     /* Save relevant details - duration, seekable, frame rate */
     app_data->seekable = gst_discoverer_info_get_seekable (info);
 
@@ -839,21 +825,17 @@ printf("on_discovered_cb 3\n"); fflush(stdout);
 	    app_data->fr_num = gst_discoverer_video_info_get_framerate_num (vinfo);
 	    app_data->fr_denom = gst_discoverer_video_info_get_framerate_denom (vinfo);
 	}
-printf("on_discovered_cb 4\n"); fflush(stdout);
 
     gst_discoverer_stream_info_list_free (v_info_gl);
 
-printf("on_discovered_cb 5\n"); fflush(stdout);
     app_data->video_duration =  gst_discoverer_info_get_duration (info);
     printf ("%" GST_TIME_FORMAT "%n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)), &len);
     app_data->fmt_duration =  (char *) malloc(len + 1);
     sprintf (app_data->fmt_duration, "%" GST_TIME_FORMAT "", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
 
-printf("on_discovered_cb 6\n"); fflush(stdout);
-    printf("GST_SECOND is ""%" PRIu64 "\n", GST_SECOND); fflush(stdout);
-    no_of_frames = ((app_data->video_duration / 1000000000) / app_data->fr_num);   // ????
+    no_of_frames = (((double) app_data->video_duration / (double) GST_SECOND) * app_data->fr_num);   // ????
     s = (char *) malloc(len + 50);
-    sprintf(s, "Video duration: %s  (Approx. %d frames)", app_data->fmt_duration, no_of_frames);
+    sprintf(s, "Video duration: %s  (Approx. %u frames)", app_data->fmt_duration, no_of_frames);
     gtk_label_set_text(GTK_LABEL (m_ui->status_info), s);
     free(s);
 printf("on_discovered_cb 7   seekable %d\nduration %s\nrate %u:%u\n", app_data->seekable, app_data->fmt_duration,
@@ -861,15 +843,28 @@ printf("on_discovered_cb 7   seekable %d\nduration %s\nrate %u:%u\n", app_data->
 }
 
 
+/* Callback for Discoverer - Start scanning for video information */
+
 static void on_start_cb (GstDiscoverer *discoverer, gpointer data)
 {
-printf("on_start_cb 1\n"); fflush(stdout);
+    MainUi *m_ui;
+
+    m_ui = (MainUi *) data;
+    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Getting Video information...");
 }
+
+
+/* Callback for Discoverer - Finished scanning for video information */
+
 static void on_finished_cb (GstDiscoverer *discoverer, gpointer data)
 {
-printf("on_finished_cb 1\n"); fflush(stdout);
-}
-static void on_source_cb (GstDiscoverer *discoverer, GstElement *elem, gpointer data)
-{
-printf("on_source_cb 1\n"); fflush(stdout);
+    MainUi *m_ui;
+    AppData *app_data;
+
+    m_ui = (MainUi *) data;
+    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
+
+    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video discovering finished");
+    g_main_loop_quit (app_data->loop);
+    g_main_loop_unref (app_data->loop);
 }
