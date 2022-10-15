@@ -56,6 +56,7 @@ void video_select_widgets(MainUi *);
 void output_dir_widgets(MainUi *);
 void image_prefix_widgets(MainUi *);
 void video_convert_select_widgets(MainUi *);
+void video_info_widgets(MainUi *);
 void set_button_widgets(MainUi *);
 
 void create_label(GtkWidget **, char *, char *, GtkWidget *);
@@ -115,6 +116,7 @@ void main_ui(AppData *app_data, MainUi *m_ui)
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->hdg_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->fn_grid, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->frm_grid, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->video_info_vbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->btn_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (m_ui->main_vbox), m_ui->status_info, TRUE, TRUE, 0);
 
@@ -151,6 +153,9 @@ void create_main_view(MainUi *m_ui)
 
     /* Add frame conversion criteria */
     video_convert_select_widgets(m_ui);
+
+    /* Video meta data display */
+    video_info_widgets(m_ui);
 
     /* Add control buttons */
     set_button_widgets(m_ui);
@@ -319,6 +324,31 @@ void video_convert_select_widgets(MainUi *m_ui)
 
     create_cbox(&(m_ui->codec_select_cbx), "codec_sel", codec_selection_arr, codec_max, 0, m_ui->frm_grid, 4, 0);
     gtk_widget_set_margin_left(m_ui->codec_select_cbx, 10);
+
+    return;
+}
+
+
+/* Video information widgets */
+
+void video_info_widgets(MainUi *m_ui)
+{  
+    m_ui->video_info_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+    gtk_widget_set_margin_top(m_ui->video_info_vbox, 15);
+
+    create_label(&(m_ui->video_info_lbl), "title_4", "Video Information", m_ui->video_info_vbox);
+
+    m_ui->video_frm = gtk_frame_new(NULL);
+    gtk_box_pack_start (GTK_BOX (m_ui->video_info_vbox), m_ui->video_frm, FALSE, FALSE, 0);
+
+    m_ui->txt_view = gtk_text_view_new();
+    gtk_widget_set_name (m_ui->txt_view, "txtview_1");
+    gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (m_ui->txt_view), GTK_WRAP_WORD);
+    gtk_text_view_set_editable (GTK_TEXT_VIEW (m_ui->txt_view), FALSE);
+    gtk_container_add (GTK_CONTAINER (m_ui->video_frm), m_ui->txt_view);
+
+    m_ui->txt_buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (m_ui->txt_view));
+    gtk_text_buffer_set_text (m_ui->txt_buffer, "\n\n\n", -1);
 
     return;
 }

@@ -56,6 +56,10 @@ typedef struct _main_ui
     GtkWidget *frm_interval_lbl, *frm_interval, *int_hbox;
     GtkWidget *video_start_lbl, *video_start, *duration_lbl, *duration, *time_hbox;
     GtkWidget *codec_lbl, *codec_select_cbx;
+    GtkWidget *video_info_lbl, *txt_view, *video_frm;  
+    GtkTextBuffer *txt_buffer;
+    GtkWidget *video_info_vbox;
+
     GtkWidget *convert_btn, *close_btn, *btn_hbox;
 
     /* Callback Handlers */
