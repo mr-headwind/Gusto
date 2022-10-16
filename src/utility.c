@@ -58,6 +58,7 @@
 /* Prototypes */
 
 void app_msg(char*, char *, GtkWidget*);
+char * app_msg_text(char*, char *);
 void info_dialog(GtkWidget *, char *, char *);
 gint query_dialog(GtkWidget *, char *, char *);
 int choose_file_dialog(char *, int, gchar **, MainUi *);
@@ -128,12 +129,11 @@ static GList *open_ui_list_head = NULL;
 static GList *open_ui_list = NULL;
 
 
-/* Process additional application messages and error conditions */
+/* Process application messages and error conditions */
 
 void app_msg(char *msg_id, char *opt_str, GtkWidget *window)
 {
     char msg[512];
-    int i;
 
     /* Lookup the message */
     get_msg(msg, msg_id, opt_str);
@@ -153,6 +153,36 @@ void app_msg(char *msg_id, char *opt_str, GtkWidget *window)
     app_msg_extra[0] = '\0';
 
     return;
+}
+
+
+/* Process application messages and error conditions and return text */
+
+char * app_msg_text(char *msg_id, char *opt_str)
+{
+    char msg[512];
+    char *msg_txt;
+    int len;
+
+    /* Lookup the message */
+    get_msg(msg, msg_id, opt_str);
+    strcat(msg, " \n");
+
+    /* Print the message */
+    printf("%s: %s\n", TITLE, msg); fflush(stdout);
+
+    if (app_msg_extra[0] != '\0')
+	printf("%s\n", app_msg_extra); fflush(stdout);
+
+    /* Set the text */
+    len = strlen(msg) + strlen(app_msg_extra) + 2;
+    msg_txt = (char *) malloc(len);
+    sprintf(msg_txt, "%s%s\n", msg, app_msg_extra);
+
+    /* Reset global message extra details */
+    app_msg_extra[0] = '\0';
+
+    return msg_txt;
 }
 
 

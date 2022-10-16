@@ -75,6 +75,7 @@ static void on_finished_cb (GstDiscoverer *, gpointer);
 extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
 extern void strlower(char *, char *);
+extern char * app_msg_text(char*, char *);
 
 
 /* Typedefs */
@@ -752,53 +753,50 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     GList *v_info_gl;
     int len;
     guint no_of_frames;
-    char *s;
+    char *s, *ss;
 
     m_ui = (MainUi *) data;
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
     uri = gst_discoverer_info_get_uri (info);
     result = gst_discoverer_info_get_result (info);
+    gtk_text_buffer_set_text (m_ui->txt_buffer, "\n\n\n", -1);
 
     switch (result)
     {
 	case GST_DISCOVERER_URI_INVALID:
 	{
 	    sprintf(app_msg_extra, "URI: %s\n", uri);
-	    app_msg("MSG9015", "Invalid URI", m_ui->window);
-	    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9015)");
+	    s = app_msg_text("MSG9015", "Invalid URI");
+	    gtk_text_buffer_set_text (m_ui->txt_buffer, s, -1);
 	    break;
 	}
 	case GST_DISCOVERER_ERROR:
 	{
 	    sprintf(app_msg_extra, "Err: %s\n", err->message);
-	    app_msg("MSG9015", "Discoverer error", m_ui->window);
-	    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9015)");
+	    s = app_msg_text("MSG9015", "Discoverer error");
 	    break;
 	}
 	case GST_DISCOVERER_TIMEOUT:
 	{
-	    app_msg("MSG9015", "Timeout", m_ui->window);
-	    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9015)");
+	    s = app_msg_text("MSG9015", "Timeout");
 	    break;
 	}
 	case GST_DISCOVERER_BUSY:
 	{
-	    app_msg("MSG9015", "Busy", m_ui->window);
-	    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9015)");
+	    s = app_msg_text("MSG9015", "Busy");
 	    break;
 	}
 	case GST_DISCOVERER_MISSING_PLUGINS:
 	{
-	    const GstStructure *s;
+	    const GstStructure *gs;
 	    gchar *str;
 
-	    s = gst_discoverer_info_get_misc (info);
-	    str = gst_structure_to_string (s);
+	    gs = gst_discoverer_info_get_misc (info);
+	    str = gst_structure_to_string (gs);
 
 	    sprintf(app_msg_extra, "Plugins: %s\n", str);
 	    g_free (str);
-	    app_msg("MSG9015", "Missing plugins", m_ui->window);
-	    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9015)");
+	    s = app_msg_text("MSG9015", "Missing plugins");
 	    break;
 	}
 
@@ -808,8 +806,13 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 
     if (result != GST_DISCOVERER_OK)
     {
-	app_msg("MSG9016", (char *) uri, m_ui->window);
-	gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9016)");
+	ss = app_msg_text("MSG9016", (char *) uri);
+	len += strlen(ss);
+	s = realloc(s, len + 1);
+	strcat(s, ss);
+	gtk_text_buffer_set_text (m_ui->txt_buffer, s, -1);
+	free(s);
+	free(ss);
 	return;
     }
 
