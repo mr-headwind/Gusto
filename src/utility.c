@@ -118,11 +118,11 @@ static const char *app_messages[][2] =
     { "MSG9013", "Error video creating discoverer. "},
     { "MSG9014", "Failed to video discoverer for: %s "},
     { "MSG9015", "Discoverer info result error: %s "},
-    { "MSG9016", "This URI cannot be played: %s "},
+    { "MSG9016", "'Video' file - %s - cannot be played "},
     { "MSG9999", "Error - Unknown error message given. "}			// NB - MUST be last
 };
 
-static const int Msg_Count = 24;
+static const int Msg_Count = 26;
 static char *Home;
 static const char *debug_hdr = "DEBUG-utility.c ";
 static GList *open_ui_list_head = NULL;
@@ -169,7 +169,7 @@ char * app_msg_text(char *msg_id, char *opt_str)
     strcat(msg, " \n");
 
     /* Print the message */
-    printf("%s: %s\n", TITLE, msg); fflush(stdout);
+    printf("%s: %s", TITLE, msg); fflush(stdout);
 
     if (app_msg_extra[0] != '\0')
 	printf("%s\n", app_msg_extra); fflush(stdout);
