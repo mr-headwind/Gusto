@@ -848,14 +848,12 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     sprintf (app_data->fmt_duration, "%" GST_TIME_FORMAT "", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
 
     no_of_frames = (((double) app_data->video_duration / (double) GST_SECOND) * app_data->fr_num);   // ????
-    s = (char *) malloc(len + 17 + 11 + 6 + 50);
+    s = (char *) malloc(len + 80);
     sprintf(s, "Video duration: %s  (Approx. %u frames)\n" \
                "Seekable: %s\n" \
-               "%u fps", app_data->fmt_duration, no_of_frames, seek_yn, app_data->fr_num);
-    gtk_label_set_text(GTK_LABEL (m_ui->status_info), s);
+               "%u fps\n", app_data->fmt_duration, no_of_frames, seek_yn, app_data->fr_num);
+    gtk_text_buffer_set_text (m_ui->txt_buffer, s, -1);
     free(s);
-printf("on_discovered_cb 7   seekable %d\nduration %s\nrate %u:%u\n", app_data->seekable, app_data->fmt_duration,
-					app_data->fr_num, app_data->fr_denom); fflush(stdout);
 }
 
 

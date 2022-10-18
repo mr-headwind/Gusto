@@ -101,8 +101,9 @@ static char *css_data_fhd =
 	"#button_1 * { color: #708090; font-weight: bold; font-size: 14px; }"
 	"#button_2 * { color: #800000; font-size: 14px; }"
 	"notebook * { font-family: Sans; font-size: 11px; }"
+	"textview { font-family: Sans; font-size: 14px; }"
 	"textview text { font-family: Sans; font-size: 12px; }"
-	"textview#txtview_1 text { font-family: Sans; font-size: 11px; background-color: #ebe7f8}"
+	"textview#txtview_1 text { font-family: Sans; font-size: 12px; background-color: #ebe7f8}"
 	"button.link { font-family: Sans; font-size: 12px; color: @DARK_BLUE; }";
 
 
