@@ -73,6 +73,8 @@ extern void OnVideoBrowse(GtkWidget*, gpointer);
 extern void OnDirBrowse(GtkWidget*, gpointer);
 extern gboolean OnVideoIn(GtkWidget*, GdkEvent *, gpointer);
 extern gboolean OnVideo(GtkWidget*, GdkEvent *, gpointer);
+extern gboolean OnDirIn(GtkWidget*, GdkEvent *, gpointer);
+extern gboolean OnDir(GtkWidget*, GdkEvent *, gpointer);
 extern void OnFrameSet(GtkWidget*, gpointer);
 extern void OnConvert(GtkWidget*, gpointer);
 extern void OnQuit(GtkWidget*, gpointer);
@@ -130,6 +132,7 @@ void main_ui(AppData *app_data, MainUi *m_ui)
     gtk_widget_show_all(m_ui->window);
     gtk_widget_set_visible (m_ui->int_hbox, FALSE);
     gtk_widget_set_visible (m_ui->time_hbox, FALSE);
+    gtk_widget_set_sensitive (m_ui->convert_btn, FALSE);
 
     return;
 }
@@ -228,6 +231,8 @@ void output_dir_widgets(MainUi *m_ui)
     gtk_entry_set_text(GTK_ENTRY (m_ui->out_dir), home_dir(m_ui->window));
     gtk_widget_set_margin_left(m_ui->out_dir, 10);
     gtk_widget_set_margin_top (m_ui->out_dir, 5);
+    g_signal_connect(G_OBJECT (m_ui->out_dir), "focus-in-event", G_CALLBACK(OnDirIn), m_ui);  
+    g_signal_connect(G_OBJECT (m_ui->out_dir), "focus-out-event", G_CALLBACK(OnDir), m_ui);  
 
     m_ui->browse_dir_btn = gtk_button_new_with_label("Browse...");
     gtk_widget_set_margin_left(m_ui->browse_dir_btn, 10);
@@ -367,6 +372,7 @@ void set_button_widgets(MainUi *m_ui)
     gtk_widget_set_name(m_ui->convert_btn, "button_1");
     g_signal_connect(m_ui->convert_btn, "clicked", G_CALLBACK(OnConvert), m_ui);
     gtk_box_pack_start (GTK_BOX (m_ui->btn_hbox), m_ui->convert_btn, FALSE, FALSE, 0);
+    gtk_widget_set_sensitive (m_ui->convert_btn, FALSE);
 
     m_ui->close_btn = gtk_button_new_with_label("Close");
     gtk_widget_set_name(m_ui->close_btn, "button_2");

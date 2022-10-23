@@ -73,6 +73,7 @@ int is_ui_reg(char *, int);
 char * home_dir();
 void strlower(char *, char *);
 void dttm_stamp(char *, size_t);
+int check_file(char *);
 int check_dir(char *);
 int make_dir(char *);
 FILE * open_file(char *, char *);
@@ -504,6 +505,23 @@ void dttm_stamp(char *s, size_t max)
     sz = strftime(s, max, "%d%m%Y_%H%M%S", tm);
 
     return;
+}
+
+
+/* Check file exists and can be opened */
+
+int check_file(char *s)
+{
+    struct stat fileStat;
+    int err;
+
+    if ((err = stat(s, &fileStat)) < 0)
+	return FALSE;
+
+    if ((fileStat.st_mode & S_IFMT) == S_IFREG)
+	return TRUE;
+    else
+	return FALSE;
 }
 
 

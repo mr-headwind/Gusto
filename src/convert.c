@@ -76,6 +76,7 @@ extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
 extern void strlower(char *, char *);
 extern char * app_msg_text(char*, char *);
+extern int check_file(char *);
 
 
 /* Typedefs */
@@ -120,6 +121,14 @@ void output_dir_select(AppData *app_data, MainUi *m_ui)
 
     if (res == GTK_RESPONSE_APPLY)
 	gtk_entry_set_text (GTK_ENTRY (m_ui->out_dir), app_data->output_dir);
+
+    /* Check Directory and creation */
+    if (check_dir(app_data->output_dir) == FALSE)
+    {
+	********** call setup and check directory
+	app_msg("MSG0008", "Video file", m_ui->window);
+	return FALSE;
+    }
 
     return;
 }
@@ -658,7 +667,14 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
 
     if (*(app_data->video_fn) == '\0')
     {
-	app_msg("MSG0002", "Video file", m_ui->window);
+	app_msg("MSG0002", app_data->video_fn, m_ui->window);
+	return FALSE;
+    }
+
+    /* Check file is valid */
+    if (check_file(app_data->video_fn) == FALSE)
+    {
+	app_msg("MSG0008", "Video file", m_ui->window);
 	return FALSE;
     }
 
@@ -704,7 +720,6 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
     /* Free resources */
     free(uri);
     g_object_unref (app_data->discoverer);
-    //g_main_loop_unref (app_data->loop);
 
     return TRUE;
 }
@@ -854,6 +869,7 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
                "%u fps\n", app_data->fmt_duration, no_of_frames, seek_yn, app_data->fr_num);
     gtk_text_buffer_set_text (m_ui->txt_buffer, s, -1);
     free(s);
+    gtk_widget_set_sensitive (m_ui->convert_btn, TRUE);
 }
 
 
