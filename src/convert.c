@@ -125,9 +125,21 @@ void output_dir_select(AppData *app_data, MainUi *m_ui)
     /* Check Directory and creation */
     if (check_dir(app_data->output_dir) == FALSE)
     {
-	********** call setup and check directory
-	app_msg("MSG0008", "Video file", m_ui->window);
-	return FALSE;
+	res = query_dialog(m_ui->window, dir_msg, app_data->output_dir);
+
+	if (res == GTK_RESPONSE_YES)
+	{
+	    if (make_dir(app_data->output_dir) == FALSE)
+	    {
+		app_msg("MSG0xxx", app_data->output_dir, m_ui->window);
+		gtk_widget_set_sensitive (m_ui->convert_btn, FALSE);
+	    }
+	}
+	else
+	{
+	    app_msg("MSG0xxx", NULL, m_ui->window);
+	    gtk_widget_set_sensitive (m_ui->convert_btn, FALSE);
+	}
     }
 
     return;
