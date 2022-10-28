@@ -76,6 +76,7 @@ void dttm_stamp(char *, size_t);
 int check_file(char *);
 int check_dir(char *);
 int make_dir(char *);
+int check_make_dir(char *, GtkWidget *);
 FILE * open_file(char *, char *);
 int read_file(FILE *, char *, int);
 int val_str2numb(char *, int *, char *, GtkWidget *);
@@ -552,6 +553,35 @@ int make_dir(char *s)
     {
 	app_msg("MSG99008", s, NULL);
 	return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/* Allow option to create a directory */
+
+int check_make_dir(char *dir, GtkWidget *window)
+{
+    gint res;
+    const char *dir_msg = "Directory %s does not exist. Create it?";
+
+    if (check_dir(dir) == FALSE)
+    {
+	res = query_dialog(window, (char *) dir_msg, dir);
+
+	if (res == GTK_RESPONSE_YES)
+	{
+	    if (make_dir(dir) == FALSE)
+	    {
+		app_msg("MSG9008", dir, window);
+		return FALSE;
+	    }
+	}
+	else
+	{
+	    return FALSE;
+	}
     }
 
     return TRUE;

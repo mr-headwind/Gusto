@@ -50,15 +50,16 @@ void OnConvert(GtkWidget*, gpointer);
 void OnVideoBrowse(GtkWidget*, gpointer);
 void OnDirBrowse(GtkWidget*, gpointer);
 gboolean OnVideoIn(GtkWidget*, GdkEvent *, gpointer);
-gboolean OnVideo(GtkWidget*, GdkEvent *, gpointer);
+gboolean OnVideoSet(GtkWidget*, GdkEvent *, gpointer);
 gboolean OnDirIn(GtkWidget*, GdkEvent *, gpointer);
-gboolean OnDir(GtkWidget*, GdkEvent *, gpointer);
+gboolean OnDirSet(GtkWidget*, GdkEvent *, gpointer);
 void OnFrameSet(GtkWidget *, gpointer);
 void OnQuit(GtkWidget*, gpointer);
 
 
 extern void video_select(AppData *, MainUi *);
 extern void output_dir_select(AppData *, MainUi *);
+extern int check_make_dir(char *, GtkWidget *);
 extern void set_convert_widgets(AppData *, MainUi *);
 extern void video_convert(AppData *, MainUi *);
 extern int get_video_data(AppData *, MainUi *);
@@ -154,7 +155,7 @@ gboolean OnVideoIn(GtkWidget *fn, GdkEvent *ev, gpointer user_data)
 
 /* Callback - Focus out on Video filename being entered */
 
-gboolean OnVideo(GtkWidget *fn, GdkEvent *ev, gpointer user_data)
+gboolean OnVideoSet(GtkWidget *fn, GdkEvent *ev, gpointer user_data)
 {  
     MainUi *m_ui;
     AppData *app_data;
@@ -201,7 +202,7 @@ gboolean OnDirIn(GtkWidget *dir, GdkEvent *ev, gpointer user_data)
 
 /* Callback - Focus out on Output directory being entered */
 
-gboolean OnDir(GtkWidget *dir, GdkEvent *ev, gpointer user_data)
+gboolean OnDirSet(GtkWidget *dir, GdkEvent *ev, gpointer user_data)
 {  
     MainUi *m_ui;
     AppData *app_data;
@@ -220,8 +221,11 @@ gboolean OnDir(GtkWidget *dir, GdkEvent *ev, gpointer user_data)
     
     free(app_data->output_dir_tmp);
 
-    /* Check directory */
-    ********** call setup and check directory
+    /* Check Directory and creation */
+    if (check_make_dir(app_data->output_dir, m_ui->window) == TRUE)
+	gtk_widget_set_sensitive (m_ui->convert_btn, TRUE);
+    else
+	gtk_widget_set_sensitive (m_ui->convert_btn, FALSE);
 
     return FALSE;
 }  

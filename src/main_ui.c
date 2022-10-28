@@ -72,9 +72,9 @@ extern void app_msg(char*, char *, GtkWidget *);
 extern void OnVideoBrowse(GtkWidget*, gpointer);
 extern void OnDirBrowse(GtkWidget*, gpointer);
 extern gboolean OnVideoIn(GtkWidget*, GdkEvent *, gpointer);
-extern gboolean OnVideo(GtkWidget*, GdkEvent *, gpointer);
+extern gboolean OnVideoSet(GtkWidget*, GdkEvent *, gpointer);
 extern gboolean OnDirIn(GtkWidget*, GdkEvent *, gpointer);
-extern gboolean OnDir(GtkWidget*, GdkEvent *, gpointer);
+extern gboolean OnDirSet(GtkWidget*, GdkEvent *, gpointer);
 extern void OnFrameSet(GtkWidget*, gpointer);
 extern void OnConvert(GtkWidget*, gpointer);
 extern void OnQuit(GtkWidget*, gpointer);
@@ -208,7 +208,7 @@ void video_select_widgets(MainUi *m_ui)
     gtk_widget_set_margin_left(m_ui->fn, 10);
     gtk_widget_set_margin_top (m_ui->fn, 5);
     g_signal_connect(G_OBJECT (m_ui->fn), "focus-in-event", G_CALLBACK(OnVideoIn), m_ui);  
-    g_signal_connect(G_OBJECT (m_ui->fn), "focus-out-event", G_CALLBACK(OnVideo), m_ui);  
+    g_signal_connect(G_OBJECT (m_ui->fn), "focus-out-event", G_CALLBACK(OnVideoSet), m_ui);  
 
     m_ui->browse_video_btn = gtk_button_new_with_label("Browse...");
     gtk_widget_set_margin_left(m_ui->browse_video_btn, 10);
@@ -232,7 +232,7 @@ void output_dir_widgets(MainUi *m_ui)
     gtk_widget_set_margin_left(m_ui->out_dir, 10);
     gtk_widget_set_margin_top (m_ui->out_dir, 5);
     g_signal_connect(G_OBJECT (m_ui->out_dir), "focus-in-event", G_CALLBACK(OnDirIn), m_ui);  
-    g_signal_connect(G_OBJECT (m_ui->out_dir), "focus-out-event", G_CALLBACK(OnDir), m_ui);  
+    g_signal_connect(G_OBJECT (m_ui->out_dir), "focus-out-event", G_CALLBACK(OnDirSet), m_ui);  
 
     m_ui->browse_dir_btn = gtk_button_new_with_label("Browse...");
     gtk_widget_set_margin_left(m_ui->browse_dir_btn, 10);

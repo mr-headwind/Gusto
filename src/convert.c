@@ -77,6 +77,7 @@ extern int choose_file_dialog(char *, int , gchar **, MainUi *);
 extern void strlower(char *, char *);
 extern char * app_msg_text(char*, char *);
 extern int check_file(char *);
+extern int check_make_dir(char *, GtkWidget *);
 
 
 /* Typedefs */
@@ -123,24 +124,10 @@ void output_dir_select(AppData *app_data, MainUi *m_ui)
 	gtk_entry_set_text (GTK_ENTRY (m_ui->out_dir), app_data->output_dir);
 
     /* Check Directory and creation */
-    if (check_dir(app_data->output_dir) == FALSE)
-    {
-	res = query_dialog(m_ui->window, dir_msg, app_data->output_dir);
-
-	if (res == GTK_RESPONSE_YES)
-	{
-	    if (make_dir(app_data->output_dir) == FALSE)
-	    {
-		app_msg("MSG0xxx", app_data->output_dir, m_ui->window);
-		gtk_widget_set_sensitive (m_ui->convert_btn, FALSE);
-	    }
-	}
-	else
-	{
-	    app_msg("MSG0xxx", NULL, m_ui->window);
-	    gtk_widget_set_sensitive (m_ui->convert_btn, FALSE);
-	}
-    }
+    if (check_make_dir(app_data->output_dir, m_ui->window) == TRUE)
+	gtk_widget_set_sensitive (m_ui->convert_btn, TRUE);
+    else
+	gtk_widget_set_sensitive (m_ui->convert_btn, FALSE);
 
     return;
 }
