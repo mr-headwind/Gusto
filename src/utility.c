@@ -537,9 +537,13 @@ int check_dir(char *s)
 	return FALSE;
 
     if ((fileStat.st_mode & S_IFMT) == S_IFDIR)
+    {
 	return TRUE;
+	}
     else
+    {
 	return FALSE;
+	}
 }
 
 

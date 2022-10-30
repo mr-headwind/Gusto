@@ -173,6 +173,7 @@ gboolean OnVideoSet(GtkWidget *fn, GdkEvent *ev, gpointer user_data)
     }
     
     free(app_data->video_fn_tmp);
+    app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
 
     /* Video information */
     get_video_data(app_data, m_ui);
@@ -220,6 +221,7 @@ gboolean OnDirSet(GtkWidget *dir, GdkEvent *ev, gpointer user_data)
     }
     
     free(app_data->output_dir_tmp);
+    app_data->output_dir = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->out_dir));
 
     /* Check Directory and creation */
     if (check_make_dir(app_data->output_dir, m_ui->window) == TRUE)
