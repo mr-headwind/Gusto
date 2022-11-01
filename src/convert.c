@@ -87,6 +87,7 @@ extern int check_make_dir(char *, GtkWidget *);
 
 static const char *debug_hdr = "DEBUG-convert.c ";
 guintptr video_window_handle = 0;
+static int img_file_count = 0;
 
 
 /* Browse and select a video file to convert */
@@ -542,6 +543,14 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 
 	    g_error_free (err);
 	    g_free (msg_str);
+	    break;
+
+	case GST_MESSAGE_ELEMENT:
+	    if (GST_MESSAGE_SRC (msg) == GST_OBJECT (app_data->gst_objs.mf_sink))
+	    {
+	    	printf("Yay !! got a message   %d    %s\n", img_file_count, GST_MESSAGE_TYPE_NAME(msg));
+	    	img_file_count++;
+	    }
 	    break;
 
 	case GST_MESSAGE_STATE_CHANGED:
