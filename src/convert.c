@@ -550,6 +550,22 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    {
 	    	printf("Yay !! got a message   %d    %s\n", img_file_count, GST_MESSAGE_TYPE_NAME(msg));
 	    	img_file_count++;
+
+	    	if (img_file_count == 750)
+	    	{
+		    if (gst_message_has_name (msg, "GstMultiFileSink"))
+			printf("Yep name is xxx\n");
+		    else
+			printf("Nope name is not xxx\n");
+
+		    const GstStructure *mfmsgstr = gst_message_get_structure (msg);
+		    const GValue *fldval = gst_structure_get_value (mfmsgstr, "filename");
+
+		    if (G_VALUE_HOLDS_STRING(fldval))
+			printf("Yep value holds string   %s\n", g_value_get_string(fldval));
+
+		    printf("filename:  %s\n", gst_structure_get_string (mfmsgstr, "filename"));
+	    	}
 	    }
 	    break;
 
