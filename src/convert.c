@@ -88,6 +88,7 @@ extern int check_make_dir(char *, GtkWidget *);
 static const char *debug_hdr = "DEBUG-convert.c ";
 guintptr video_window_handle = 0;
 static int img_file_count = 0;
+static pthread_t mon_tid;
 
 
 /* Browse and select a video file to convert */
@@ -360,6 +361,8 @@ int start_pipeline(AppData *app_data, MainUi *m_ui, int init)
     guint source_id;
     char s[100];
 
+    img_file_count = 0;
+
     if (init == TRUE)
     {
 	/* Set up sync handler for setting the xid once the pipeline is started */
@@ -582,13 +585,18 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    ret = gst_element_get_state (app_data->c_pipeline, &curr_state, &pend_state, GST_CLOCK_TIME_NONE);
 
 	    /* If not already started, start thread to monitor progress */
-	    /*
 	    if (m_ui->thread_init == FALSE)
 	    {
 		if (curr_state)
 		{
 		    if (ret == GST_STATE_CHANGE_SUCCESS && curr_state == GST_STATE_PLAYING)
 		    {
+			if (init_thread(m_ui, &monitor_posts) == FALSE)
+			    break;
+		    }
+		}
+	    }
+	    /*
 		    	if (m_ui->duration > 0) 		// Timed capture
 		    	{
 			    if (init_thread(m_ui, &monitor_duration) == FALSE)
@@ -604,9 +612,6 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 			    if (init_thread(m_ui, &monitor_unltd) == FALSE)
 			    	break;
             		}
-		    }
-		}
-	    }
 	    */
 
 	    break;
@@ -921,4 +926,28 @@ static void on_finished_cb (GstDiscoverer *discoverer, gpointer data)
     gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video discovering finished");
     g_main_loop_quit (app_data->loop);
     g_main_loop_unref (app_data->loop);
+}
+
+
+
+/* Thread functions */
+
+
+/* Start the nominated capture thread */
+
+int init_thread(MainUi *m_ui, void *(*start_routine)(void*))
+{
+    int p_err;
+
+    /* Start thread */
+    if ((p_err = pthread_create(&mon_tid, NULL, start_routine, (void *) m_ui)) != 0)
+    {
+	sprintf(app_msg_extra, "Error: %s", strerror(p_err));
+	log_msg("SYS9016", NULL, "SYS9016", m_ui->window);
+	return FALSE;
+    }
+
+    m_ui->thread_init = TRUE;
+
+    return TRUE;
 }

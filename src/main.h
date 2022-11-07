@@ -71,4 +71,5 @@ typedef struct _main_ui
 
     /* Other values */
     int no_of_frames;
+    int thread_init;
 } MainUi;
