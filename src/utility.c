@@ -121,10 +121,11 @@ static const char *app_messages[][2] =
     { "MSG9014", "Failed to video discoverer for: %s "},
     { "MSG9015", "Discoverer info result error: %s "},
     { "MSG9016", "'Video' file - %s - cannot be played "},
+    { "MSG9017", "Error: Unable to create thread, "},
     { "MSG9999", "Error - Unknown error message given. "}			// NB - MUST be last
 };
 
-static const int Msg_Count = 26;
+static const int Msg_Count = 27;
 static char *Home;
 static const char *debug_hdr = "DEBUG-utility.c ";
 static GList *open_ui_list_head = NULL;

@@ -71,6 +71,8 @@ static void cb_newpad (GstElement *, GstPad *, gpointer);
 static void on_discovered_cb (GstDiscoverer *, GstDiscovererInfo *, GError *, gpointer);
 static void on_start_cb (GstDiscoverer *, gpointer);
 static void on_finished_cb (GstDiscoverer *, gpointer);
+int init_thread(MainUi *, void *(*start_routine)(void*));
+void * monitor_posts(void *);
 
 extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
@@ -87,8 +89,8 @@ extern int check_make_dir(char *, GtkWidget *);
 
 static const char *debug_hdr = "DEBUG-convert.c ";
 guintptr video_window_handle = 0;
-static int img_file_count = 0;
 static pthread_t mon_tid;
+static int ret_mon;
 
 
 /* Browse and select a video file to convert */
@@ -361,7 +363,11 @@ int start_pipeline(AppData *app_data, MainUi *m_ui, int init)
     guint source_id;
     char s[100];
 
-    img_file_count = 0;
+    m_ui->img_file_count = 0;
+    m_ui->thread_init = FALSE;
+
+    sprintf(s, "Processed 0 of %u files (approx.)\n", m_ui->no_of_frames);
+    gtk_label_set_text (GTK_LABEL (m_ui->status_info), s);
 
     if (init == TRUE)
     {
@@ -551,10 +557,10 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	case GST_MESSAGE_ELEMENT:
 	    if (GST_MESSAGE_SRC (msg) == GST_OBJECT (app_data->gst_objs.mf_sink))
 	    {
-	    	printf("Yay !! got a message   %d    %s\n", img_file_count, GST_MESSAGE_TYPE_NAME(msg));
-	    	img_file_count++;
+	    	printf("Yay !! got a message   %d    %s\n", m_ui->img_file_count, GST_MESSAGE_TYPE_NAME(msg));
+	    	m_ui->img_file_count++;
 
-	    	if (img_file_count == 750)
+	    	if (m_ui->img_file_count == 750)
 	    	{
 		    if (gst_message_has_name (msg, "GstMultiFileSink"))
 			printf("Yep name is xxx\n");
@@ -643,26 +649,13 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    */
 
 	case GST_MESSAGE_EOS:
-	    /* Lock this section of code */
-	    /*
-	    pthread_mutex_lock(&capt_lock_mutex);
-
-	    ** Check the meta data file **
-	    setup_meta(cam_data);
-
-	    ** Prepare to restart normal viewing **
-	    capt_prepare_view(cam_data, m_ui);
-
-	    ** Release the mutex and set capture as done **
 	    m_ui->thread_init = FALSE;
-	    cam_data->mode = CAM_MODE_NONE;
-	    pthread_cond_signal(&capt_eos_cv);
-	    pthread_mutex_unlock(&capt_lock_mutex);
-	    */
+
 	    if (set_pipeline_state(app_data, GST_STATE_NULL, m_ui->window) == FALSE)
 		return FALSE;
 
 	    gst_object_unref (app_data->c_pipeline);
+	    gtk_label_set_text (GTK_LABEL (m_ui->status_info), "Finished converting video to images");
 	    break;
 
 	    /* Debug
@@ -892,6 +885,7 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     sprintf (app_data->fmt_duration, "%" GST_TIME_FORMAT "", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
 
     no_of_frames = (((double) app_data->video_duration / (double) GST_SECOND) * app_data->fr_num);   // ????
+    m_ui->no_of_frames = no_of_frames;
     s = (char *) malloc(len + 80);
     sprintf(s, "Video duration: %s  (Approx. %u frames)\n" \
                "Seekable: %s\n" \
@@ -909,7 +903,7 @@ static void on_start_cb (GstDiscoverer *discoverer, gpointer data)
     MainUi *m_ui;
 
     m_ui = (MainUi *) data;
-    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Getting Video information...");
+    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Getting Video information, please wait...");
 }
 
 
@@ -943,11 +937,46 @@ int init_thread(MainUi *m_ui, void *(*start_routine)(void*))
     if ((p_err = pthread_create(&mon_tid, NULL, start_routine, (void *) m_ui)) != 0)
     {
 	sprintf(app_msg_extra, "Error: %s", strerror(p_err));
-	log_msg("SYS9016", NULL, "SYS9016", m_ui->window);
+	app_msg("MSG9017", NULL, m_ui->window);
 	return FALSE;
     }
 
     m_ui->thread_init = TRUE;
 
     return TRUE;
+}
+
+
+/* Monitor multifilesink posts to show progress */
+
+void * monitor_posts(void *arg)
+{
+    MainUi *m_ui;
+    AppData *app_data;
+    int last_count = 0;
+    char new_status[150];
+    
+    /* Base information text */
+    ret_mon = TRUE;
+    m_ui = (MainUi *) arg;
+    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
+
+    while(1)
+    {
+    	usleep(500000);
+
+    	/* Test for end of file */
+	if (! G_IS_OBJECT(app_data->c_pipeline))
+	    break;
+
+	/* Check if the count has increased */
+	if (m_ui->img_file_count > last_count)
+	{
+	    snprintf(new_status, (int) sizeof(new_status), "Processed %u of %u files (approx.)\n", 
+	    	    					   m_ui->img_file_count, m_ui->no_of_frames);
+	    gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
+	}
+    };
+
+    pthread_exit(&ret_mon);
 }

@@ -70,6 +70,7 @@ typedef struct _main_ui
     int main_height;
 
     /* Other values */
-    int no_of_frames;
+    guint no_of_frames;
+    guint img_file_count;
     int thread_init;
 } MainUi;
