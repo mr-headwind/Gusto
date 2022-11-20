@@ -216,6 +216,7 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
     switch(app_data->interval_type)
     {
     	case 0:				// Convert every frame
+	    app_data->frame_interval = 1;
 	    break;
 	case 1:				// Convert a selection of frames
 	    s = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->frm_interval));
@@ -293,6 +294,12 @@ int set_elements(AppData *app_data, MainUi *m_ui)
 
     g_signal_connect (app_data->gst_objs.v_decode, "pad-added", G_CALLBACK (cb_newpad), app_data);
 
+    if (app_data->frame_interval > 1)
+    {
+	if (! create_element(&(app_data->gst_objs.v_rate), "videorate", "v_rate", app_data, m_ui))
+	    return FALSE;
+    }
+
     if (! create_element(&(app_data->gst_objs.encoder), encoder_arr[i], "encoder", app_data, m_ui))
     	return FALSE;
 
@@ -317,6 +324,9 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     g_object_set (app_data->gst_objs.mf_sink, "location", s, "post-messages", TRUE, NULL);
     free(s);
 
+    if (app_data->frame_interval > 1)
+	g_object_set (app_data->gst_objs.v_rate, "rate", (gdouble) app_data->frame_interval, NULL);
+
     /* Build the pipeline - add all the elements */
     gst_bin_add_many (GST_BIN (app_data->c_pipeline), 
     				app_data->gst_objs.file_src, 
@@ -324,6 +334,9 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     				app_data->gst_objs.encoder, 
     				app_data->gst_objs.mf_sink, 
     				NULL);
+
+    if (app_data->frame_interval > 1)
+	gst_bin_add (GST_BIN (app_data->c_pipeline), app_data->gst_objs.v_rate); 
 
     return TRUE;
 }
@@ -349,6 +362,15 @@ int link_pipeline(AppData *app_data, MainUi *m_ui)
     {
 	app_msg("MSG9010", NULL, m_ui->window);
 	return FALSE;
+    }
+
+    if (app_data->frame_interval > 1)
+    {
+	if (gst_element_link (gst_objs->v_rate, gst_objs->encoder) != TRUE)
+	{
+	    app_msg("MSG9010", NULL, m_ui->window);
+	    return FALSE;
+	}
     }
 
     return TRUE;
@@ -756,24 +778,27 @@ static void cb_newpad (GstElement *decodebin, GstPad *pad, gpointer user_data)
 {
     GstCaps *caps;
     GstStructure *str;
-    GstPad *encoder_pad;
+    GstPad *link_pad;			// Either the encoder pad or the video rate pad
     AppData *app_data;
 
     /* Initial */
     app_data = (AppData *) user_data;
 
     /* Only link once */
-    encoder_pad = gst_element_get_static_pad (app_data->gst_objs.encoder, "sink");
+    if (app_data->frame_interval > 1)
+	link_pad = gst_element_get_static_pad (app_data->gst_objs.v_rate, "sink");
+    else
+	link_pad = gst_element_get_static_pad (app_data->gst_objs.encoder, "sink");
 
-    if (GST_PAD_IS_LINKED (encoder_pad))
+    if (GST_PAD_IS_LINKED (link_pad))
     {
-	g_object_unref (encoder_pad);
+	g_object_unref (link_pad);
 	return;
     }
 
     /* Link and continue pipeline */
-    gst_pad_link (pad, encoder_pad);
-    g_object_unref (encoder_pad);
+    gst_pad_link (pad, link_pad);
+    g_object_unref (link_pad);
 }
 
 
