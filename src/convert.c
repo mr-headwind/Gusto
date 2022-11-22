@@ -90,7 +90,7 @@ extern int check_make_dir(char *, GtkWidget *);
 static const char *debug_hdr = "DEBUG-convert.c ";
 guintptr video_window_handle = 0;
 static pthread_t mon_tid;
-static int ret_mon;
+static int ret_mon, discover_retry;
 
 
 /* Browse and select a video file to convert */
@@ -126,6 +126,9 @@ void output_dir_select(AppData *app_data, MainUi *m_ui)
 
     if (res == GTK_RESPONSE_APPLY)
 	gtk_entry_set_text (GTK_ENTRY (m_ui->out_dir), app_data->output_dir);
+
+    else if (res == GTK_RESPONSE_CANCEL)
+    	return;
 
     /* Check Directory and creation */
     if (check_make_dir(app_data->output_dir, m_ui->window) == TRUE)
@@ -708,6 +711,7 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
 
     /* Initial */
     app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
+    discover_retry = TRUE;
 
     if (*(app_data->video_fn) == '\0')
     {
@@ -722,11 +726,16 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
 	return FALSE;
     }
 
+    /* Set up the video file uri */
+    uri = (char *) malloc(strlen(app_data->video_fn) + 8);
+    sprintf(uri, "file://%s", app_data->video_fn);
+
     /* Instantiate the Discoverer */
     app_data->discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
 
     if (!app_data->discoverer)
     {
+	free(uri);
 	sprintf(app_msg_extra, "Error: %s\n", err->message);
 	g_clear_error (&err);
 	app_msg("MSG9013", NULL, m_ui->window);
@@ -743,9 +752,6 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
     gst_discoverer_start (app_data->discoverer);
 
     /* Add a request to process asynchronously the URI passed through the command line */
-    uri = (char *) malloc(strlen(app_data->video_fn) + 8);
-    sprintf(uri, "file://%s", app_data->video_fn);
-
     if (!gst_discoverer_discover_uri_async (app_data->discoverer, uri))
     {
 	app_msg("MSG9014", uri, m_ui->window);
@@ -980,11 +986,13 @@ void * monitor_posts(void *arg)
     AppData *app_data;
     int last_count = 0;
     char new_status[150];
+    guint frames_to_convert;
     
     /* Base information text */
     ret_mon = TRUE;
     m_ui = (MainUi *) arg;
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
+    frames_to_convert = m_ui->no_of_frames / (guint) app_data->frame_interval; 
 
     while(1)
     {
@@ -998,7 +1006,7 @@ void * monitor_posts(void *arg)
 	if (m_ui->img_file_count > last_count)
 	{
 	    snprintf(new_status, (int) sizeof(new_status), "Processed %u of %u files (approx.)\n", 
-	    	    					   m_ui->img_file_count, m_ui->no_of_frames);
+	    	    					   m_ui->img_file_count, frames_to_convert);
 	    gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
 	}
     };
