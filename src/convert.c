@@ -849,7 +849,17 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 	case GST_DISCOVERER_TIMEOUT:
 	{
 	    app_msg("MSG9015", "Timeout", NULL);
-	    sprintf(app_msg_extra, "Timed out while opening video file, please retry\n");
+
+	    if (retry_count < 3)
+	    {
+		sprintf(app_msg_extra, "Timed out while opening video file, retrying...\n");
+		retry_count++'
+	    }
+	    else
+	    {
+		sprintf(app_msg_extra, "Timed out while opening video file, retry later\n");
+	    }
+
 	    break;
 	}
 	case GST_DISCOVERER_BUSY:
