@@ -223,16 +223,22 @@ void video_select_widgets(MainUi *m_ui)
 
 void output_dir_widgets(MainUi *m_ui)
 {  
+    char *dir, *out_dir;
+
+    out_dir = (char *) malloc(strlen(home_dir(m_ui->window)) + 8);
+    sprintf(out_dir, "%s/myimgs", home_dir(m_ui->window));
+
     create_label2(&(m_ui->out_dir_lbl), "title_4", "Output Location", m_ui->fn_grid, 0, 1, 1, 1);
     gtk_widget_set_halign(m_ui->out_dir_lbl, GTK_ALIGN_END);
 
     create_entry(&(m_ui->out_dir), "ent_1", m_ui->fn_grid, 1, 1);
     gtk_entry_set_width_chars(GTK_ENTRY (m_ui->out_dir), 30);
-    gtk_entry_set_text(GTK_ENTRY (m_ui->out_dir), home_dir(m_ui->window));
+    gtk_entry_set_text(GTK_ENTRY (m_ui->out_dir), out_dir);
     gtk_widget_set_margin_left(m_ui->out_dir, 10);
     gtk_widget_set_margin_top (m_ui->out_dir, 5);
     g_signal_connect(G_OBJECT (m_ui->out_dir), "focus-in-event", G_CALLBACK(OnDirIn), m_ui);  
     g_signal_connect(G_OBJECT (m_ui->out_dir), "focus-out-event", G_CALLBACK(OnDirSet), m_ui);  
+    free(out_dir);
 
     m_ui->browse_dir_btn = gtk_button_new_with_label("Browse...");
     gtk_widget_set_margin_left(m_ui->browse_dir_btn, 10);

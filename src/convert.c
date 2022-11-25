@@ -32,6 +32,7 @@
 
 
 /* Defines */
+#define MAX_RETRY 3
 
 
 /* Includes */
@@ -90,7 +91,8 @@ extern int check_make_dir(char *, GtkWidget *);
 static const char *debug_hdr = "DEBUG-convert.c ";
 guintptr video_window_handle = 0;
 static pthread_t mon_tid;
-static int ret_mon, discover_retry;
+static int ret_mon;
+static int discover_retry, retry_count;
 
 
 /* Browse and select a video file to convert */
@@ -712,6 +714,7 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
     /* Initial */
     app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
     discover_retry = TRUE;
+    retry_count = 0;
 
     if (*(app_data->video_fn) == '\0')
     {
@@ -731,45 +734,50 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
     sprintf(uri, "file://%s", app_data->video_fn);
 
     /* Instantiate the Discoverer */
-    app_data->discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
-
-    if (!app_data->discoverer)
+    while (discover_retry)
     {
-	free(uri);
-	sprintf(app_msg_extra, "Error: %s\n", err->message);
-	g_clear_error (&err);
-	app_msg("MSG9013", NULL, m_ui->window);
-	gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9013)");
-	return FALSE;
-    }
+    	discover_retry = FALSE;
+	app_data->discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
 
-    /* Connect to the interesting signals */
-    g_signal_connect (app_data->discoverer, "discovered", G_CALLBACK (on_discovered_cb), m_ui);
-    g_signal_connect (app_data->discoverer, "finished", G_CALLBACK (on_finished_cb), m_ui);
-    g_signal_connect (app_data->discoverer, "starting", G_CALLBACK (on_start_cb), m_ui);
+	if (!app_data->discoverer)
+	{
+	    free(uri);
+	    sprintf(app_msg_extra, "Error: %s\n", err->message);
+	    g_clear_error (&err);
+	    app_msg("MSG9013", NULL, m_ui->window);
+	    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9013)");
+	    return FALSE;
+	}
 
-    /* Start the discoverer process (nothing to do yet) */
-    gst_discoverer_start (app_data->discoverer);
+	/* Connect to the interesting signals */
+	g_signal_connect (app_data->discoverer, "discovered", G_CALLBACK (on_discovered_cb), m_ui);
+	g_signal_connect (app_data->discoverer, "finished", G_CALLBACK (on_finished_cb), m_ui);
+	g_signal_connect (app_data->discoverer, "starting", G_CALLBACK (on_start_cb), m_ui);
 
-    /* Add a request to process asynchronously the URI passed through the command line */
-    if (!gst_discoverer_discover_uri_async (app_data->discoverer, uri))
-    {
-	app_msg("MSG9014", uri, m_ui->window);
+	/* Start the discoverer process (nothing to do yet) */
+	gst_discoverer_start (app_data->discoverer);
+
+	/* Add a request to process asynchronously the URI passed through the command line */
+	if (!gst_discoverer_discover_uri_async (app_data->discoverer, uri))
+	{
+	    app_msg("MSG9014", uri, m_ui->window);
+	    g_object_unref (app_data->discoverer);
+	    free(uri);
+	    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9014)");
+	    return FALSE;
+	}
+
+	app_data->loop = g_main_loop_new (NULL, FALSE);
+	g_main_loop_run (app_data->loop);
+
+	/* Stop the discoverer process */
+	gst_discoverer_stop (app_data->discoverer);
+
+	/* Free resources */
 	g_object_unref (app_data->discoverer);
-	free(uri);
-	gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video error (MSG9014)");
-	return FALSE;
     }
 
-    app_data->loop = g_main_loop_new (NULL, FALSE);
-    g_main_loop_run (app_data->loop);
-
-    /* Stop the discoverer process */
-    gst_discoverer_stop (app_data->discoverer);
-
-    /* Free resources */
     free(uri);
-    g_object_unref (app_data->discoverer);
 
     return TRUE;
 }
@@ -850,10 +858,11 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 	{
 	    app_msg("MSG9015", "Timeout", NULL);
 
-	    if (retry_count < 3)
+	    if (retry_count < MAX_RETRY)
 	    {
 		sprintf(app_msg_extra, "Timed out while opening video file, retrying...\n");
-		retry_count++'
+		retry_count++;
+		discover_retry = TRUE;
 	    }
 	    else
 	    {
