@@ -63,6 +63,7 @@ typedef struct _AppData
     GstElement *c_pipeline;           	/* Our one and only pipeline */
     app_gst_objs gst_objs;		/* GST objects for viewing & recording */
     GstState state;                 	/* Current state of the pipeline */
+    GstState init_state;                /* Start state of the pipeline, dependent on Interval */
     char *video_fn;			/* Video file name */
     char *video_fn_tmp;			/* Temporary file name storage */
     int interval_type;	    		/* Type of frame conversion (eg. each frame or every n frames / seconds) */

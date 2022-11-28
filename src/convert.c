@@ -222,16 +222,19 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
     {
     	case 0:				// Convert every frame
 	    app_data->frame_interval = 1;
+	    app_data->init_state = GST_STATE_PLAYING;
 	    break;
 	case 1:				// Convert a selection of frames
 	    s = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->frm_interval));
 	    app_data->frame_interval = atoi(s);
+	    app_data->init_state = GST_STATE_PLAYING;
 	    break;
 	case 2:				// Convert frames for time period
 	    s = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->video_start));
 	    app_data->time_start = atoi(s);
 	    s = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->duration));
 	    app_data->time_duration = atoi(s);
+	    app_data->init_state = GST_STATE_PAUSED;
 	    break;
 	default:
 	    app_msg("MSG0004", "Error: Selection type", m_ui->window);
@@ -403,7 +406,7 @@ int start_pipeline(AppData *app_data, MainUi *m_ui, int init)
 	gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, NULL, NULL);
     }
 
-    if (set_pipeline_state(app_data, GST_STATE_PLAYING, m_ui->window) == FALSE)
+    if (set_pipeline_state(app_data, app_data->init_state, m_ui->window) == FALSE)
         return FALSE;
 
     if (init == TRUE)
@@ -617,6 +620,14 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    GstStateChangeReturn ret;
 	    ret = gst_element_get_state (app_data->c_pipeline, &curr_state, &pend_state, GST_CLOCK_TIME_NONE);
 
+	    /* If converting a time interval, we'll need to do a seek first */
+	    if (curr_state == GST_STATE_PAUSED)
+	    	if (app_data->interval_type == 2)
+	    	{
+		    send_seek_event(app_data, m_ui);
+		    break;
+		}
+
 	    /* If not already started, start thread to monitor progress */
 	    if (m_ui->thread_init == FALSE)
 	    {
@@ -699,6 +710,25 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    */
 	    break;
     }
+
+    return TRUE;
+}
+
+
+/* Send a seek event for converting a section on video */
+
+int send_seek_event(app_data, m_ui)
+{
+    if !(gst_element_seek(app_data->c_pipeline,
+    			  1,
+    			  GST_FORMAT_TIME,
+    			  GST_SEEK_FLAG_FLUSH,
+    			  GST_SEEK_TYPE_SET,
+        ) 
+	return FALSE;
+
+    if (set_pipeline_state(app_data, GST_STATE_PLAYING, m_ui->window) == FALSE)
+        return FALSE;
 
     return TRUE;
 }
