@@ -68,6 +68,7 @@ int set_pipeline_state(AppData *, GstState, GtkWidget *);
 int create_element(GstElement **, const char *, const char *, AppData *, MainUi *);
 GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
+int send_seek_event(AppData *, MainUi *);
 static void cb_newpad (GstElement *, GstPad *, gpointer);
 static void on_discovered_cb (GstDiscoverer *, GstDiscovererInfo *, GError *, gpointer);
 static void on_start_cb (GstDiscoverer *, gpointer);
@@ -229,11 +230,12 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
 	    app_data->frame_interval = atoi(s);
 	    app_data->init_state = GST_STATE_PLAYING;
 	    break;
-	case 2:				// Convert frames for time period
+	case 2:				// Convert frames for time period (minutes)
+	case 3:				// Convert frames for time period (seconds)
 	    s = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->video_start));
-	    app_data->time_start = atoi(s);
+	    app_data->time_start = (gint64) atoi(s);
 	    s = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->duration));
-	    app_data->time_duration = atoi(s);
+	    app_data->time_duration = (gint64) atoi(s);
 	    app_data->init_state = GST_STATE_PAUSED;
 	    break;
 	default:
@@ -717,13 +719,22 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 
 /* Send a seek event for converting a section on video */
 
-int send_seek_event(app_data, m_ui)
+int send_seek_event(AppData *app_data, MainUi *m_ui)
 {
-    if !(gst_element_seek(app_data->c_pipeline,
-    			  1,
-    			  GST_FORMAT_TIME,
-    			  GST_SEEK_FLAG_FLUSH,
-    			  GST_SEEK_TYPE_SET,
+    gint64 start_pos, stop_pos;
+
+    start_pos = app_data->time_start * GST_SECOND;
+    start_pos = (app_data->time_start + app_data->time_duration) * GST_SECOND;
+
+    if (app_data->interval_type == 2)
+    {
+    	start_pos *= 60;
+    	stop_pos *= 60;
+    }
+
+    if (! gst_element_seek(app_data->c_pipeline, 1, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+    			   GST_SEEK_TYPE_SET, start_pos,
+    			   GST_SEEK_TYPE_SET, stop_pos)
         ) 
 	return FALSE;
 

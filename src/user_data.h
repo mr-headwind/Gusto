@@ -66,10 +66,10 @@ typedef struct _AppData
     GstState init_state;                /* Start state of the pipeline, dependent on Interval */
     char *video_fn;			/* Video file name */
     char *video_fn_tmp;			/* Temporary file name storage */
-    int interval_type;	    		/* Type of frame conversion (eg. each frame or every n frames / seconds) */
+    int interval_type;	    		/* Type of frame conversion (eg. each frame or every n frames, time) */
     int frame_interval;	    		/* Interval (no. of frames) between conversions */
-    int time_start;	    		/* Collect frames for a time interval */
-    int time_duration;	    		/* Time period */
+    gint64 time_start;	    		/* Collect frames for a time interval */
+    gint64 time_duration;	    	/* Time period */
     gchar *output_dir;			/* Directory to hold output image files */
     gchar *output_dir_tmp;		/* Temporary directory storage */
     char *image_type;	    		/* Image type (jpg, png, bmp) */
