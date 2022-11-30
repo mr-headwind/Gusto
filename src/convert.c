@@ -162,7 +162,7 @@ void set_convert_widgets(AppData *user_data, MainUi *m_ui)
 	gtk_widget_set_visible (m_ui->int_hbox, TRUE);
 	gtk_widget_set_visible (m_ui->time_hbox, FALSE);
     }
-    else if (idx == 2)
+    else if (idx == 2 || idx == 3)
     {
 	gtk_widget_set_visible (m_ui->time_hbox, TRUE);
 	gtk_widget_set_visible (m_ui->int_hbox, FALSE);
@@ -237,6 +237,7 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
 	    s = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->duration));
 	    app_data->time_duration = (gint64) atoi(s);
 	    app_data->init_state = GST_STATE_PAUSED;
+	    app_data->frame_interval = 1;
 	    break;
 	default:
 	    app_msg("MSG0004", "Error: Selection type", m_ui->window);
@@ -589,10 +590,11 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	case GST_MESSAGE_ELEMENT:
 	    if (GST_MESSAGE_SRC (msg) == GST_OBJECT (app_data->gst_objs.mf_sink))
 	    {
-	    	printf("Yay !! got a message   %d    %s\n", m_ui->img_file_count, GST_MESSAGE_TYPE_NAME(msg));
+	    	//printf("Yay !! got a message   %d    %s\n", m_ui->img_file_count, GST_MESSAGE_TYPE_NAME(msg));
 	    	m_ui->img_file_count++;
 
-	    	if (m_ui->img_file_count == 750)
+	    	//if (m_ui->img_file_count == 750)
+	    	if (m_ui->img_file_count == 20)
 	    	{
 		    if (gst_message_has_name (msg, "GstMultiFileSink"))
 			printf("Yep name is xxx\n");
@@ -622,9 +624,10 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    GstStateChangeReturn ret;
 	    ret = gst_element_get_state (app_data->c_pipeline, &curr_state, &pend_state, GST_CLOCK_TIME_NONE);
 
+printf("got async\n");
 	    /* If converting a time interval, we'll need to do a seek first */
 	    if (curr_state == GST_STATE_PAUSED)
-	    	if (app_data->interval_type == 2)
+	    	if (app_data->interval_type == 2 || app_data->interval_type == 3)
 	    	{
 		    send_seek_event(app_data, m_ui);
 		    break;
@@ -723,6 +726,7 @@ int send_seek_event(AppData *app_data, MainUi *m_ui)
 {
     gint64 start_pos, stop_pos;
 
+printf("sending seek\n");
     start_pos = app_data->time_start * GST_SECOND;
     start_pos = (app_data->time_start + app_data->time_duration) * GST_SECOND;
 
@@ -738,9 +742,11 @@ int send_seek_event(AppData *app_data, MainUi *m_ui)
         ) 
 	return FALSE;
 
+printf("sent seek\n");
     if (set_pipeline_state(app_data, GST_STATE_PLAYING, m_ui->window) == FALSE)
         return FALSE;
 
+printf("sending end\n");
     return TRUE;
 }
 
@@ -975,7 +981,7 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     app_data->fmt_duration =  (char *) malloc(len + 1);
     sprintf (app_data->fmt_duration, "%" GST_TIME_FORMAT "", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
 
-    no_of_frames = (((double) app_data->video_duration / (double) GST_SECOND) * app_data->fr_num);   // ????
+    no_of_frames = (((double) app_data->video_duration / (double) GST_SECOND) * app_data->fr_num); 
     m_ui->no_of_frames = no_of_frames;
     s = (char *) malloc(len + 80);
     sprintf(s, "Video duration: %s  (Approx. %u frames)\n" \
@@ -1053,10 +1059,28 @@ void * monitor_posts(void *arg)
     m_ui = (MainUi *) arg;
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
     frames_to_convert = m_ui->no_of_frames / (guint) app_data->frame_interval; 
+    switch(app_data->interval_type)
+    {
+    	case 0:				// Convert every frame
+	    frames_to_convert = m_ui->no_of_frames;
+	    break;
+	case 1:				// Convert a selection of frames
+	    frames_to_convert = m_ui->no_of_frames / (guint) app_data->frame_interval; 
+	    break;
+	case 2:				// Convert frames for time period (minutes)
+	    frames_to_convert = app_data->fr_num * app_data->time_duration * 60; 
+	    break;
+	case 3:				// Convert frames for time period (seconds)
+	    frames_to_convert = app_data->fr_num * app_data->time_duration; 
+	    break;
+	default:
+	    app_msg("MSG0004", "Error: Selection type", m_ui->window);
+	    pthread_exit(&ret_mon);
+    }
 
     while(1)
     {
-    	usleep(500000);
+    	usleep(500000); 
 
     	/* Test for end of file */
 	if (! G_IS_OBJECT(app_data->c_pipeline))
