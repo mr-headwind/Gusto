@@ -620,6 +620,15 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    if (GST_MESSAGE_SRC (msg) != GST_OBJECT (app_data->c_pipeline))
 	    	break;
 
+gint64 pos, len;
+
+if (gst_element_query_position (app_data->c_pipeline, GST_FORMAT_TIME, &pos)
+    && gst_element_query_duration (app_data->c_pipeline, GST_FORMAT_TIME, &len))
+    {
+    g_print ("Time: %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "\r",
+         GST_TIME_ARGS (pos), GST_TIME_ARGS (len));
+    }
+
 	    GstState curr_state, pend_state;
 	    GstStateChangeReturn ret;
 	    ret = gst_element_get_state (app_data->c_pipeline, &curr_state, &pend_state, GST_CLOCK_TIME_NONE);
