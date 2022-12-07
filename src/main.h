@@ -73,4 +73,5 @@ typedef struct _main_ui
     guint no_of_frames;
     guint img_file_count;
     int thread_init;
+    int seek_play;
 } MainUi;

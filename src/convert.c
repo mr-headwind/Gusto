@@ -398,6 +398,7 @@ int start_pipeline(AppData *app_data, MainUi *m_ui, int init)
 
     m_ui->img_file_count = 0;
     m_ui->thread_init = FALSE;
+    m_ui->seek_play = FALSE;
 
     sprintf(s, "Processed 0 of %u files (approx.)\n", m_ui->no_of_frames);
     gtk_label_set_text (GTK_LABEL (m_ui->status_info), s);
@@ -625,7 +626,7 @@ gint64 pos, len;
 if (gst_element_query_position (app_data->c_pipeline, GST_FORMAT_TIME, &pos)
     && gst_element_query_duration (app_data->c_pipeline, GST_FORMAT_TIME, &len))
     {
-    g_print ("Time: %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "\r",
+    g_print ("Time2: %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "\n",
          GST_TIME_ARGS (pos), GST_TIME_ARGS (len));
     }
 
@@ -634,6 +635,14 @@ if (gst_element_query_position (app_data->c_pipeline, GST_FORMAT_TIME, &pos)
 	    ret = gst_element_get_state (app_data->c_pipeline, &curr_state, &pend_state, GST_CLOCK_TIME_NONE);
 
 printf("got async\n");
+	    /* If seek has completed for time interval conversion, start playing */
+	    if (m_ui->seek_play == TRUE)
+	    {
+		m_ui->seek_play = FALSE;
+		if (set_pipeline_state(app_data, GST_STATE_PLAYING, m_ui->window) == FALSE)
+		    return FALSE;
+	    }
+
 	    /* If converting a time interval, we'll need to do a seek first */
 	    if (curr_state == GST_STATE_PAUSED)
 	    	if (app_data->interval_type == 2 || app_data->interval_type == 3)
@@ -735,9 +744,8 @@ int send_seek_event(AppData *app_data, MainUi *m_ui)
 {
     gint64 start_pos, stop_pos;
 
-printf("sending seek\n");
     start_pos = app_data->time_start * GST_SECOND;
-    start_pos = (app_data->time_start + app_data->time_duration) * GST_SECOND;
+    stop_pos = (app_data->time_start + app_data->time_duration) * GST_SECOND;
 
     if (app_data->interval_type == 2)
     {
@@ -747,15 +755,11 @@ printf("sending seek\n");
 
     if (! gst_element_seek(app_data->c_pipeline, 1, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
     			   GST_SEEK_TYPE_SET, start_pos,
-    			   GST_SEEK_TYPE_SET, stop_pos)
-        ) 
+    			   GST_SEEK_TYPE_SET, stop_pos)) 
 	return FALSE;
 
-printf("sent seek\n");
-    if (set_pipeline_state(app_data, GST_STATE_PLAYING, m_ui->window) == FALSE)
-        return FALSE;
+    m_ui->seek_play = TRUE;
 
-printf("sending end\n");
     return TRUE;
 }
 
