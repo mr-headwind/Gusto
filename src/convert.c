@@ -590,28 +590,27 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 
 	case GST_MESSAGE_ELEMENT:
 	    if (GST_MESSAGE_SRC (msg) == GST_OBJECT (app_data->gst_objs.mf_sink))
-	    {
-	    	//printf("Yay !! got a message   %d    %s\n", m_ui->img_file_count, GST_MESSAGE_TYPE_NAME(msg));
 	    	m_ui->img_file_count++;
-
-	    	//if (m_ui->img_file_count == 750)
-	    	if (m_ui->img_file_count == 20)
-	    	{
-		    if (gst_message_has_name (msg, "GstMultiFileSink"))
-			printf("Yep name is xxx\n");
-		    else
-			printf("Nope name is not xxx\n");
-
-		    const GstStructure *mfmsgstr = gst_message_get_structure (msg);
-		    const GValue *fldval = gst_structure_get_value (mfmsgstr, "filename");
-
-		    if (G_VALUE_HOLDS_STRING(fldval))
-			printf("Yep value holds string   %s\n", g_value_get_string(fldval));
-
-		    printf("filename:  %s\n", gst_structure_get_string (mfmsgstr, "filename"));
-	    	}
-	    }
+	     
 	    break;
+
+/*
+if (m_ui->img_file_count == 20)
+{
+    if (gst_message_has_name (msg, "GstMultiFileSink"))
+	printf("Yep name is xxx\n");
+    else
+	printf("Nope name is not xxx\n");
+
+    const GstStructure *mfmsgstr = gst_message_get_structure (msg);
+    const GValue *fldval = gst_structure_get_value (mfmsgstr, "filename");
+
+    if (G_VALUE_HOLDS_STRING(fldval))
+	printf("Yep value holds string   %s\n", g_value_get_string(fldval));
+
+    printf("filename:  %s\n", gst_structure_get_string (mfmsgstr, "filename"));
+}
+*/
 
 	case GST_MESSAGE_STATE_CHANGED:
 	    gst_objs = &(app_data->gst_objs);
@@ -621,6 +620,7 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    if (GST_MESSAGE_SRC (msg) != GST_OBJECT (app_data->c_pipeline))
 	    	break;
 
+/*
 gint64 pos, len;
 
 if (gst_element_query_position (app_data->c_pipeline, GST_FORMAT_TIME, &pos)
@@ -629,12 +629,12 @@ if (gst_element_query_position (app_data->c_pipeline, GST_FORMAT_TIME, &pos)
     g_print ("Time2: %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "\n",
          GST_TIME_ARGS (pos), GST_TIME_ARGS (len));
     }
+*/
 
 	    GstState curr_state, pend_state;
 	    GstStateChangeReturn ret;
 	    ret = gst_element_get_state (app_data->c_pipeline, &curr_state, &pend_state, GST_CLOCK_TIME_NONE);
 
-printf("got async\n");
 	    /* If seek has completed for time interval conversion, start playing */
 	    if (m_ui->seek_play == TRUE)
 	    {
@@ -663,51 +663,9 @@ printf("got async\n");
 		    }
 		}
 	    }
-	    /*
-		    	if (m_ui->duration > 0) 		// Timed capture
-		    	{
-			    if (init_thread(m_ui, &monitor_duration) == FALSE)
-			    	break;
-            		}
-		    	else if (m_ui->no_of_frames > 0) 	// Number of buffers capture
-		    	{
-			    if (init_thread(m_ui, &monitor_frames) == FALSE)
-			    	break;
-            		}
-            		else					// Unlimited
-		    	{
-			    if (init_thread(m_ui, &monitor_unltd) == FALSE)
-			    	break;
-            		}
-	    */
 
 	    break;
 
-	    /* Debug
-	    if ((GST_MESSAGE_TYPE (msg)) == GST_MESSAGE_STATE_CHANGED)
-		printf("%s capt 9a state change\n", debug_hdr);
-	    else
-		printf("%s capt 9a async done\n", debug_hdr);
-
-	    if (! curr_state)
-		printf("%s capt 9a curr state null\n", debug_hdr);
-	    else
-	    {
-	    	if (curr_state == GST_STATE_PLAYING)
-		    printf("%s capt 9a curr state playing\n", debug_hdr);
-	    }
-
-	    if (ret == GST_STATE_CHANGE_SUCCESS)
-		printf("%s capt 9a state change success\n", debug_hdr);
-
-	    else if (ret == GST_STATE_CHANGE_ASYNC)
-		printf("%s capt 9a state change success\n", debug_hdr);
-	    else
-		printf("%s capt 9a state change failed\n", debug_hdr);
-
-	    fflush(stdout);
-	    break;
-	    */
 
 	case GST_MESSAGE_EOS:
 	    m_ui->thread_init = FALSE;
@@ -718,11 +676,6 @@ printf("got async\n");
 	    gst_object_unref (app_data->c_pipeline);
 	    gtk_label_set_text (GTK_LABEL (m_ui->status_info), "Finished converting video to images");
 	    break;
-
-	    /* Debug
-	    printf("%s capt 9 EOS\n", debug_hdr);
-	    fflush(stdout);
-	    */
 
 	default:
 	    /*
@@ -1108,5 +1061,6 @@ void * monitor_posts(void *arg)
 	}
     };
 
+printf ("pthread_exit(&ret_mon);\n");
     pthread_exit(&ret_mon);
 }
