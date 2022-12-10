@@ -675,6 +675,7 @@ if (gst_element_query_position (app_data->c_pipeline, GST_FORMAT_TIME, &pos)
 
 	    gst_object_unref (app_data->c_pipeline);
 	    gtk_label_set_text (GTK_LABEL (m_ui->status_info), "Finished converting video to images");
+printf ("eos resceived\n"); fflush(stdout);
 	    break;
 
 	default:
@@ -1061,6 +1062,6 @@ void * monitor_posts(void *arg)
 	}
     };
 
-printf ("pthread_exit(&ret_mon);\n");
+printf ("pthread_exit\n"); fflush(stdout);
     pthread_exit(&ret_mon);
 }
