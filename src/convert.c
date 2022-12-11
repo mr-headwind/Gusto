@@ -58,7 +58,8 @@ void video_select(AppData *, MainUi *);
 void output_dir_select(AppData *, MainUi *);
 void set_convert_widgets(AppData *, MainUi *);
 int video_convert(AppData *, MainUi *);
-void get_user_data(AppData *, MainUi *);
+int get_user_data(AppData *, MainUi *);
+int validate_period(AppData *, MainUi *);
 int get_video_data(AppData *app_data, MainUi *m_ui);
 int setup_gst_pipeline(AppData *, MainUi *);
 int set_elements(AppData *, MainUi *);
@@ -78,6 +79,7 @@ void * monitor_posts(void *);
 
 extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
+extern gint query_dialog(GtkWidget *, char *, char *);
 extern void strlower(char *, char *);
 extern char * app_msg_text(char*, char *);
 extern int check_file(char *);
@@ -197,7 +199,7 @@ int video_convert(AppData *app_data, MainUi *m_ui)
 
 /* Collect necessary user data */
 
-void get_user_data(AppData *app_data, MainUi *m_ui)
+int get_user_data(AppData *app_data, MainUi *m_ui)
 {  
     gchar *s;
 
@@ -238,14 +240,43 @@ void get_user_data(AppData *app_data, MainUi *m_ui)
 	    app_data->time_duration = (gint64) atoi(s);
 	    app_data->init_state = GST_STATE_PAUSED;
 	    app_data->frame_interval = 1;
+	    if (! validate_period(app_data, m_ui))
+	    	return FALSE;
 	    break;
 	default:
 	    app_msg("MSG0004", "Error: Selection type", m_ui->window);
-	    return;
+	    return FALSE;
 	    break;
     }
 
-    return;
+    return TRUE;
+}
+
+
+/* Check for valid time period */
+
+int validate_period(AppData *app_data, MainUi *m_ui)
+{  
+    gint64 segment_length;
+    gint res;
+    const char *dir_msg = "Duration extends beyond the video length. Continue?";
+
+    segment_length = (app_data->time_start + app_data->time_duration) * GST_SECOND;
+
+    if (app_data->interval_type == 2)
+    	segment_length *= 60;
+
+    if (segment_length > app_data->video_duration)
+    {
+	res = query_dialog(m_ui->window, (char *) dir_msg, NULL);
+
+	if (res == GTK_RESPONSE_NO)
+	    return FALSE;
+	else
+	    app_data->time_duration = 0;
+    }
+
+    return TRUE;
 }
 
 
@@ -675,7 +706,7 @@ if (gst_element_query_position (app_data->c_pipeline, GST_FORMAT_TIME, &pos)
 
 	    gst_object_unref (app_data->c_pipeline);
 	    gtk_label_set_text (GTK_LABEL (m_ui->status_info), "Finished converting video to images");
-printf ("eos resceived\n"); fflush(stdout);
+printf ("eos received\n"); fflush(stdout);
 	    break;
 
 	default:
