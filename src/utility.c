@@ -105,6 +105,7 @@ static const char *app_messages[][2] =
     { "MSG0007", "Failed to create image: %s "},
     { "MSG0008", "File %s does not exist or cannot be read. "},
     { "MSG0009", "Error: %s has an invalid value. "},
+    { "MSG0010", "Error: This video is not seekable. Cannot convert a video segment. "},
     { "MSG9000", "Session started. "},
     { "MSG9001", "Session ends. "},
     { "MSG9003", "Failed to start application. "},
@@ -125,7 +126,7 @@ static const char *app_messages[][2] =
     { "MSG9999", "Error - Unknown error message given. "}			// NB - MUST be last
 };
 
-static const int Msg_Count = 27;
+static const int Msg_Count = 28;
 static char *Home;
 static const char *debug_hdr = "DEBUG-utility.c ";
 static GList *open_ui_list_head = NULL;

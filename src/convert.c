@@ -240,6 +240,7 @@ int get_user_data(AppData *app_data, MainUi *m_ui)
 	    app_data->time_duration = (gint64) atoi(s);
 	    app_data->init_state = GST_STATE_PAUSED;
 	    app_data->frame_interval = 1;
+
 	    if (! validate_period(app_data, m_ui))
 	    	return FALSE;
 	    break;
@@ -253,14 +254,22 @@ int get_user_data(AppData *app_data, MainUi *m_ui)
 }
 
 
-/* Check for valid time period */
+/* Check that time period conversion is valid */
 
 int validate_period(AppData *app_data, MainUi *m_ui)
 {  
     gint64 segment_length;
     gint res;
-    const char *dir_msg = "Duration extends beyond the video length. Continue?";
+    const char *dir_msg = "Duration extends beyond the video length. Continue (Truncated)?";
 
+    /* Check seekable */
+    if (! app_data->seekable)
+    {
+	app_msg("MSG0010", NULL, m_ui->window);
+	return FALSE;
+    }
+
+    /* Time segment */
     segment_length = (app_data->time_start + app_data->time_duration) * GST_SECOND;
 
     if (app_data->interval_type == 2)
@@ -738,10 +747,18 @@ int send_seek_event(AppData *app_data, MainUi *m_ui)
     	stop_pos *= 60;
     }
 
-    if (! gst_element_seek(app_data->c_pipeline, 1, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
-    			   GST_SEEK_TYPE_SET, start_pos,
-    			   GST_SEEK_TYPE_SET, stop_pos)) 
-	return FALSE;
+    if (app_data->time_duration > 0)
+    {
+	if (! gst_element_seek(app_data->c_pipeline, 1, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+			       GST_SEEK_TYPE_SET, start_pos,
+			       GST_SEEK_TYPE_SET, stop_pos)) 
+	    return FALSE;
+    }
+    else
+    {
+	if (! gst_element_seek_simple(app_data->c_pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, start_pos)) 
+	    return FALSE;
+    }
 
     m_ui->seek_play = TRUE;
 

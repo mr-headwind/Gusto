@@ -325,6 +325,7 @@ void video_convert_select_widgets(MainUi *m_ui)
     gtk_widget_set_name(m_ui->duration, "ent_1");
     gtk_entry_set_width_chars(GTK_ENTRY (m_ui->duration), 3);
     gtk_widget_set_margin_left(m_ui->duration, 10);
+    gtk_widget_set_tooltip_text (m_ui->duration, "Enter '0' for remainder of video.");
     gtk_box_pack_start (GTK_BOX (m_ui->time_hbox), m_ui->duration, FALSE, FALSE, 0);
 
     gtk_grid_attach(GTK_GRID (m_ui->frm_grid), m_ui->time_hbox, 2, 0, 1, 1);
