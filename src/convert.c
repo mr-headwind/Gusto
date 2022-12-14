@@ -1074,6 +1074,11 @@ void * monitor_posts(void *arg)
     m_ui = (MainUi *) arg;
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
     frames_to_convert = m_ui->no_of_frames / (guint) app_data->frame_interval; 
+
+    if (app_data->time_duration > 0)
+    {
+    } 
+
     switch(app_data->interval_type)
     {
     	case 0:				// Convert every frame
