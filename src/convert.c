@@ -1068,16 +1068,13 @@ void * monitor_posts(void *arg)
     int last_count = 0;
     char new_status[150];
     guint frames_to_convert;
+    gint64 segment_length;
     
     /* Base information text */
     ret_mon = TRUE;
     m_ui = (MainUi *) arg;
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
     frames_to_convert = m_ui->no_of_frames / (guint) app_data->frame_interval; 
-
-    if (app_data->time_duration > 0)
-    {
-    } 
 
     switch(app_data->interval_type)
     {
@@ -1088,9 +1085,21 @@ void * monitor_posts(void *arg)
 	    frames_to_convert = m_ui->no_of_frames / (guint) app_data->frame_interval; 
 	    break;
 	case 2:				// Convert frames for time period (minutes)
+	    if (app_data->time_duration == 0)
+	    {
+		segment_length = (app_data->time_duration - (app_data->time_start * GST_SECOND));
+		app_data->time_duration = segment_length / GST_SECOND;
+	    } 
+
 	    frames_to_convert = app_data->fr_num * app_data->time_duration * 60; 
 	    break;
 	case 3:				// Convert frames for time period (seconds)
+	    if (app_data->time_duration == 0)
+	    {
+		segment_length = (app_data->time_duration - (app_data->time_start * GST_SECOND));
+		app_data->time_duration = segment_length / GST_SECOND;
+	    } 
+
 	    frames_to_convert = app_data->fr_num * app_data->time_duration; 
 	    break;
 	default:
