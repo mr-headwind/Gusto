@@ -271,7 +271,7 @@ void image_prefix_widgets(MainUi *m_ui)
 
 void video_convert_select_widgets(MainUi *m_ui)
 {  
-    const char *frame_selection_arr[] = { "Every frame", "Selected frames", "Duration (mins)", "Duration (secs)" };
+    const char *frame_selection_arr[] = { "Every frame", "Selected frames", "Duration (secs)", "Duration (mins)" };
     const int frm_max = 4;
     const char *codec_selection_arr[] = { "JPG", "PNG", "BMP" };
     const int codec_max = 3;

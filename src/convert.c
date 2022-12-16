@@ -76,6 +76,7 @@ static void on_start_cb (GstDiscoverer *, gpointer);
 static void on_finished_cb (GstDiscoverer *, gpointer);
 int init_thread(MainUi *, void *(*start_routine)(void*));
 void * monitor_posts(void *);
+void calc_duration(AppData *, int, int *);
 
 extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
@@ -232,8 +233,8 @@ int get_user_data(AppData *app_data, MainUi *m_ui)
 	    app_data->frame_interval = atoi(s);
 	    app_data->init_state = GST_STATE_PLAYING;
 	    break;
-	case 2:				// Convert frames for time period (minutes)
-	case 3:				// Convert frames for time period (seconds)
+	case 2:				// Convert frames for time period (seconds)
+	case 3:				// Convert frames for time period (minutes)
 	    s = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->video_start));
 	    app_data->time_start = (gint64) atoi(s);
 	    s = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->duration));
@@ -261,6 +262,7 @@ int validate_period(AppData *app_data, MainUi *m_ui)
     gint64 segment_length;
     gint res;
     const char *dir_msg = "Duration extends beyond the video length. Continue (Truncated)?";
+    int mpx;
 
     /* Check seekable */
     if (! app_data->seekable)
@@ -269,10 +271,22 @@ int validate_period(AppData *app_data, MainUi *m_ui)
 	return FALSE;
     }
 
-    /* Time segment */
+    /* Start */
+    if (app_data->interval_type == 3)
+    	mpx = 60;
+    else
+    	mpx = 1;
+
+    if ((app_data->time_start * mpx * GST_SECOND) > app_data->video_duration)
+    {
+	app_msg("MSG0011", NULL, m_ui->window);
+	return FALSE;
+    }
+
+    /* Duration */
     segment_length = (app_data->time_start + app_data->time_duration) * GST_SECOND;
 
-    if (app_data->interval_type == 2)
+    if (app_data->interval_type == 3)
     	segment_length *= 60;
 
     if (segment_length > app_data->video_duration)
@@ -741,7 +755,7 @@ int send_seek_event(AppData *app_data, MainUi *m_ui)
     start_pos = app_data->time_start * GST_SECOND;
     stop_pos = (app_data->time_start + app_data->time_duration) * GST_SECOND;
 
-    if (app_data->interval_type == 2)
+    if (app_data->interval_type == 3)
     {
     	start_pos *= 60;
     	stop_pos *= 60;
@@ -1068,7 +1082,7 @@ void * monitor_posts(void *arg)
     int last_count = 0;
     char new_status[150];
     guint frames_to_convert;
-    gint64 segment_length;
+    int add_fr;
     
     /* Base information text */
     ret_mon = TRUE;
@@ -1086,21 +1100,15 @@ void * monitor_posts(void *arg)
 	    break;
 	case 2:				// Convert frames for time period (minutes)
 	    if (app_data->time_duration == 0)
-	    {
-		segment_length = (app_data->time_duration - (app_data->time_start * GST_SECOND));
-		app_data->time_duration = segment_length / GST_SECOND;
-	    } 
+	    	calc_duration(app_data, 1, &add_fr);
 
-	    frames_to_convert = app_data->fr_num * app_data->time_duration * 60; 
+	    frames_to_convert = (app_data->fr_num * app_data->time_duration) + add_fr; 
 	    break;
 	case 3:				// Convert frames for time period (seconds)
 	    if (app_data->time_duration == 0)
-	    {
-		segment_length = (app_data->time_duration - (app_data->time_start * GST_SECOND));
-		app_data->time_duration = segment_length / GST_SECOND;
-	    } 
+	    	calc_duration(app_data, 60, &add_fr);
 
-	    frames_to_convert = app_data->fr_num * app_data->time_duration; 
+	    frames_to_convert = (app_data->fr_num * app_data->time_duration * 60) + add_fr; 
 	    break;
 	default:
 	    app_msg("MSG0004", "Error: Selection type", m_ui->window);
@@ -1126,4 +1134,20 @@ void * monitor_posts(void *arg)
 
 printf ("pthread_exit\n"); fflush(stdout);
     pthread_exit(&ret_mon);
+}
+
+
+/* Calculate the duration */
+
+void calc_duration(AppData *app_data, int mpx, int *add_fr)
+{
+    gint64 segment_length;
+	     
+    *add_fr = 0;
+    segment_length = (app_data->video_duration - (app_data->time_start * GST_SECOND));
+    app_data->time_duration = segment_length / GST_SECOND;
+    *add_fr = (segment_length % GST_SECOND) * app_data->fr_num;
+printf("calc_duration    duration %lu   mod %lu \n", app_data->time_duration, segment_length % GST_SECOND); fflush(stdout);
+
+    return;
 }
