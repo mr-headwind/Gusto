@@ -77,6 +77,7 @@ static void on_finished_cb (GstDiscoverer *, gpointer);
 int init_thread(MainUi *, void *(*start_routine)(void*));
 void * monitor_posts(void *);
 void calc_duration(AppData *, int, int *);
+int get_msd(gint64);
 
 extern void app_msg(char*, char *, GtkWidget *);
 extern int choose_file_dialog(char *, int , gchar **, MainUi *);
@@ -1132,7 +1133,6 @@ void * monitor_posts(void *arg)
 	}
     };
 
-printf ("pthread_exit\n"); fflush(stdout);
     pthread_exit(&ret_mon);
 }
 
@@ -1141,13 +1141,32 @@ printf ("pthread_exit\n"); fflush(stdout);
 
 void calc_duration(AppData *app_data, int mpx, int *add_fr)
 {
-    gint64 segment_length;
+    gint64 segment_length, ns_rem;
 	     
     *add_fr = 0;
     segment_length = (app_data->video_duration - (app_data->time_start * GST_SECOND));
     app_data->time_duration = segment_length / GST_SECOND;
     *add_fr = (segment_length % GST_SECOND) * app_data->fr_num;
-printf("calc_duration    duration %lu   mod %lu \n", app_data->time_duration, segment_length % GST_SECOND); fflush(stdout);
+
+    // The modulus represents a fraction of a nanosecond or fraction of a second of video.
+    // To improve the accuracy of the approcimate total frames to convert we need add this in,
+    // but we only use the most significant digit.
+    ns_rem = segment_length % GST_SECOND;
+    *add_fr = (get_msd(ns_rem) * 0.1) * app_data->fr_num;
 
     return;
+}
+
+
+/* Recursive division to get  */
+
+int get_msd(gint64 num)
+{
+    gint64 n;
+    n = num / 10;
+
+    if (n > 0)
+    	n = get_msd(n);
+    else
+    	return num;
 }
