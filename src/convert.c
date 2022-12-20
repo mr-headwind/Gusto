@@ -730,7 +730,6 @@ if (gst_element_query_position (app_data->c_pipeline, GST_FORMAT_TIME, &pos)
 
 	    gst_object_unref (app_data->c_pipeline);
 	    gtk_label_set_text (GTK_LABEL (m_ui->status_info), "Finished converting video to images");
-printf ("eos received\n"); fflush(stdout);
 	    break;
 
 	default:
@@ -871,6 +870,7 @@ static void cb_newpad (GstElement *decodebin, GstPad *pad, gpointer user_data)
     GstStructure *str;
     GstPad *link_pad;			// Either the encoder pad or the video rate pad
     AppData *app_data;
+    GstPadLinkReturn r;
 
     /* Initial */
     app_data = (AppData *) user_data;
@@ -888,7 +888,9 @@ static void cb_newpad (GstElement *decodebin, GstPad *pad, gpointer user_data)
     }
 
     /* Link and continue pipeline */
-    gst_pad_link (pad, link_pad);
+    r = gst_pad_link (pad, link_pad);
+printf("Newpad  return link  %d\n", r); fflush(stdout);
+
     g_object_unref (link_pad);
 }
 
@@ -1144,12 +1146,11 @@ void calc_duration(AppData *app_data, int mpx, int *add_fr)
     gint64 segment_length, ns_rem;
 	     
     *add_fr = 0;
-    segment_length = (app_data->video_duration - (app_data->time_start * GST_SECOND));
+    segment_length = (app_data->video_duration - (app_data->time_start * mpx * GST_SECOND));
     app_data->time_duration = segment_length / GST_SECOND;
-    *add_fr = (segment_length % GST_SECOND) * app_data->fr_num;
 
-    // The modulus represents a fraction of a nanosecond or fraction of a second of video.
-    // To improve the accuracy of the approcimate total frames to convert we need add this in,
+    // The modulus (below) represents a fraction of a nanosecond or fraction of a second of video.
+    // To improve the accuracy of the approximate total frames to convert we need to add this in,
     // but we only use the most significant digit.
     ns_rem = segment_length % GST_SECOND;
     *add_fr = (get_msd(ns_rem) * 0.1) * app_data->fr_num;
