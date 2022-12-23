@@ -309,7 +309,11 @@ int validate_period(AppData *app_data, MainUi *m_ui)
 
     ** Conversion pipeline **
 
-    | Filesrc | -> | Decodebin |-> | Image Encoder | Multifilesink location=xx%05d.(jpg, png, bmp)
+    | Filesrc | -> | Decodebin |-> | VideoConvert | Image Encoder | Multifilesink location=xx%05d.(jpg, png, bmp)
+
+    OR
+
+    | Filesrc | -> | Decodebin |-> | VideoRate | VideoConvert | Image Encoder | Multifilesink location=xx%05d.(jpg, png, bmp)
 
 */
 
@@ -366,6 +370,9 @@ int set_elements(AppData *app_data, MainUi *m_ui)
 	    return FALSE;
     }
 
+    if (! create_element(&(app_data->gst_objs.v_convert), "videoconvert", "v_convert", NULL, m_ui))
+    	return FALSE;
+
     if (! create_element(&(app_data->gst_objs.encoder), encoder_arr[i], "encoder", app_data, m_ui))
     	return FALSE;
 
@@ -397,6 +404,7 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     gst_bin_add_many (GST_BIN (app_data->c_pipeline), 
     				app_data->gst_objs.file_src, 
     				app_data->gst_objs.v_decode, 
+    				app_data->gst_objs.v_convert, 
     				app_data->gst_objs.encoder, 
     				app_data->gst_objs.mf_sink, 
     				NULL);
@@ -424,6 +432,12 @@ int link_pipeline(AppData *app_data, MainUi *m_ui)
 	return FALSE;
     }
 
+    if (gst_element_link (gst_objs->v_convert, gst_objs->encoder) != TRUE)
+    {
+	app_msg("MSG9010", NULL, m_ui->window);
+	return FALSE;
+    }
+
     if (gst_element_link (gst_objs->encoder, gst_objs->mf_sink) != TRUE)
     {
 	app_msg("MSG9010", NULL, m_ui->window);
@@ -432,7 +446,7 @@ int link_pipeline(AppData *app_data, MainUi *m_ui)
 
     if (app_data->frame_interval > 1)
     {
-	if (gst_element_link (gst_objs->v_rate, gst_objs->encoder) != TRUE)
+	if (gst_element_link (gst_objs->v_rate, gst_objs->v_convert) != TRUE)
 	{
 	    app_msg("MSG9010", NULL, m_ui->window);
 	    return FALSE;
@@ -868,7 +882,7 @@ static void cb_newpad (GstElement *decodebin, GstPad *pad, gpointer user_data)
 {
     GstCaps *caps;
     GstStructure *str;
-    GstPad *link_pad;			// Either the encoder pad or the video rate pad
+    GstPad *link_pad;			// Either the videoconvert pad or the video rate pad
     AppData *app_data;
     GstPadLinkReturn r;
 
@@ -879,7 +893,7 @@ static void cb_newpad (GstElement *decodebin, GstPad *pad, gpointer user_data)
     if (app_data->frame_interval > 1)
 	link_pad = gst_element_get_static_pad (app_data->gst_objs.v_rate, "sink");
     else
-	link_pad = gst_element_get_static_pad (app_data->gst_objs.encoder, "sink");
+	link_pad = gst_element_get_static_pad (app_data->gst_objs.v_convert, "sink");
 
     if (GST_PAD_IS_LINKED (link_pad))
     {
@@ -889,7 +903,6 @@ static void cb_newpad (GstElement *decodebin, GstPad *pad, gpointer user_data)
 
     /* Link and continue pipeline */
     r = gst_pad_link (pad, link_pad);
-printf("Newpad  return link  %d\n", r); fflush(stdout);
 
     g_object_unref (link_pad);
 }

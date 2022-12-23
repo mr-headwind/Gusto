@@ -52,7 +52,7 @@
 typedef struct _app_gst_objects
 {
     GstElement *file_src, *v_decode, *encoder, *mf_sink;
-    GstElement *v_rate;
+    GstElement *v_rate, *v_convert;
 } app_gst_objs;
 
 
