@@ -181,7 +181,8 @@ void set_convert_widgets(AppData *user_data, MainUi *m_ui)
 int video_convert(AppData *app_data, MainUi *m_ui)
 {  
     /* Collect user data */
-    get_user_data(app_data, m_ui);
+    if (get_user_data(app_data, m_ui) == FALSE)
+    	return FALSE;
 
     /* Conversion pipeline */
     if (setup_gst_pipeline(app_data, m_ui) == FALSE)
@@ -208,12 +209,24 @@ int get_user_data(AppData *app_data, MainUi *m_ui)
     app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
 
     if (*(app_data->video_fn) == '\0')
+    {
 	app_msg("MSG0002", "Video file", m_ui->window);
+	return FALSE;
+    }
 
     app_data->output_dir = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->out_dir));
 
     if (*(app_data->output_dir) == '\0')
+    {
 	app_msg("MSG0002", "Output Location", m_ui->window);
+	return FALSE;
+    }
+
+    if (check_make_dir(app_data->output_dir, m_ui->window) == FALSE)
+    {
+	app_msg("MSG0003", "Output Location", m_ui->window);
+	return FALSE;
+    }
 
     app_data->img_prefix = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->img_prefix));
 

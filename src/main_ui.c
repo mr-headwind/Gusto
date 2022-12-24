@@ -236,8 +236,6 @@ void output_dir_widgets(MainUi *m_ui)
     gtk_entry_set_text(GTK_ENTRY (m_ui->out_dir), out_dir);
     gtk_widget_set_margin_left(m_ui->out_dir, 10);
     gtk_widget_set_margin_top (m_ui->out_dir, 5);
-    g_signal_connect(G_OBJECT (m_ui->out_dir), "focus-in-event", G_CALLBACK(OnDirIn), m_ui);  
-    g_signal_connect(G_OBJECT (m_ui->out_dir), "focus-out-event", G_CALLBACK(OnDirSet), m_ui);  
     free(out_dir);
 
     m_ui->browse_dir_btn = gtk_button_new_with_label("Browse...");

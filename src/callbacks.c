@@ -51,8 +51,6 @@ void OnVideoBrowse(GtkWidget*, gpointer);
 void OnDirBrowse(GtkWidget*, gpointer);
 gboolean OnVideoIn(GtkWidget*, GdkEvent *, gpointer);
 gboolean OnVideoSet(GtkWidget*, GdkEvent *, gpointer);
-gboolean OnDirIn(GtkWidget*, GdkEvent *, gpointer);
-gboolean OnDirSet(GtkWidget*, GdkEvent *, gpointer);
 void OnFrameSet(GtkWidget *, gpointer);
 void OnQuit(GtkWidget*, gpointer);
 
@@ -177,57 +175,6 @@ gboolean OnVideoSet(GtkWidget *fn, GdkEvent *ev, gpointer user_data)
 
     /* Video information */
     get_video_data(app_data, m_ui);
-
-    return FALSE;
-}  
-
-
-/* Callback - Focus in on Output directory - save to check for change on focus out */
-
-gboolean OnDirIn(GtkWidget *dir, GdkEvent *ev, gpointer user_data)
-{  
-    MainUi *m_ui;
-    AppData *app_data;
-
-    /* Get data */
-    m_ui = (MainUi *) user_data;
-    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
-
-    /* Save temporary copy of contents */
-    app_data->output_dir_tmp = (char *) malloc(strlen(gtk_entry_get_text(GTK_ENTRY (m_ui->out_dir))) + 1);
-    strcpy(app_data->output_dir_tmp, gtk_entry_get_text(GTK_ENTRY (m_ui->out_dir)));
-
-    return FALSE;
-}  
-
-
-/* Callback - Focus out on Output directory being entered */
-
-gboolean OnDirSet(GtkWidget *dir, GdkEvent *ev, gpointer user_data)
-{  
-    MainUi *m_ui;
-    AppData *app_data;
-
-    /* Get data */
-    m_ui = (MainUi *) user_data;
-
-    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
-
-    /* Check for changes */
-    if (strcmp(app_data->output_dir_tmp, gtk_entry_get_text(GTK_ENTRY (m_ui->out_dir))) == 0)
-    {
-    	free(app_data->output_dir_tmp);
-    	return FALSE;
-    }
-    
-    free(app_data->output_dir_tmp);
-    app_data->output_dir = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->out_dir));
-
-    /* Check Directory and creation */
-    if (check_make_dir(app_data->output_dir, m_ui->window) == TRUE)
-	gtk_widget_set_sensitive (m_ui->convert_btn, TRUE);
-    else
-	gtk_widget_set_sensitive (m_ui->convert_btn, FALSE);
 
     return FALSE;
 }  
