@@ -15,3 +15,5 @@ gst-launch-1.0 filesrc location=MVI_0665.MP4 ! decodebin ! queue ! jpegenc ! mul
 gst-launch-1.0 filesrc location=MVI_0665.MP4 ! decodebin ! jpegenc ! multifilesink location=aa%05d.jpg
 
 gst-launch-1.0 filesrc location=MVI_0665.MP4 ! decodebin ! videorate rate=4 ! jpegenc ! multifilesink location=aa%05d.jpg
+
+gst-launch-1.0 -m filesrc location=MVI_0665.MP4 ! decodebin ! videoconvert ! gdkpixbufsink

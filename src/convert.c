@@ -328,6 +328,12 @@ int validate_period(AppData *app_data, MainUi *m_ui)
 
     | Filesrc | -> | Decodebin |-> | VideoRate | VideoConvert | Image Encoder | Multifilesink location=xx%05d.(jpg, png, bmp)
 
+    OR
+
+    | Filesrc | -> | Decodebin |-> | VideoRate | VideoConvert | gdkpixbufsink		// BMP
+    
+    https://docs.gtk.org/gdk-pixbuf/method.Pixbuf.save_to_buffer.html
+
 */
 
 int setup_gst_pipeline(AppData *app_data, MainUi *m_ui)
