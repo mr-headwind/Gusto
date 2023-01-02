@@ -52,7 +52,7 @@
 typedef struct _app_gst_objects
 {
     GstElement *file_src, *v_decode, *encoder, *mf_sink;
-    GstElement *v_rate, *v_convert;
+    GstElement *v_rate, *v_convert, *px_buf;
 } app_gst_objs;
 
 
@@ -71,7 +71,7 @@ typedef struct _AppData
     gint64 time_start;	    		/* Collect frames for a time interval */
     gint64 time_duration;	    	/* Time period */
     gchar *output_dir;			/* Directory to hold output image files */
-    char *image_type;	    		/* Image type (jpg, png, bmp) */
+    char *image_type;	    		/* Image type (jpg, png, pnm, bmp) */
     char *img_prefix;			/* Prefix to use for image file names */
 
     guint fr_denom;			/* Frame rate demoninator */

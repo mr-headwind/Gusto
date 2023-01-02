@@ -271,8 +271,8 @@ void video_convert_select_widgets(MainUi *m_ui)
 {  
     const char *frame_selection_arr[] = { "Every frame", "Selected frames", "Duration (secs)", "Duration (mins)" };
     const int frm_max = 4;
-    const char *codec_selection_arr[] = { "JPG", "PNG", "BMP" };
-    const int codec_max = 3;
+    const char *codec_selection_arr[] = { "JPG", "PNG", "PNM", "BMP" };
+    const int codec_max = 4;
 
     /*Set container */
     m_ui->frm_grid = gtk_grid_new();

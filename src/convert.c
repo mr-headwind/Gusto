@@ -330,10 +330,9 @@ int validate_period(AppData *app_data, MainUi *m_ui)
 
     OR
 
-    | Filesrc | -> | Decodebin |-> | VideoRate | VideoConvert | gdkpixbufsink		// BMP
-    
+    | Filesrc | -> | Decodebin |-> | VideoRate | VideoConvert | gdkpixbufsink         // BMP special
+ 
     https://docs.gtk.org/gdk-pixbuf/method.Pixbuf.save_to_buffer.html
-
 */
 
 int setup_gst_pipeline(AppData *app_data, MainUi *m_ui)
@@ -350,25 +349,28 @@ int setup_gst_pipeline(AppData *app_data, MainUi *m_ui)
 
 int set_elements(AppData *app_data, MainUi *m_ui)
 {
-    const char *codec_selection_arr[] = { "JPG", "PNG", "BMP" };
-    const char *encoder_arr[] = { "jpegenc", "pngenc", "pnmenc" };
-    const int codec_max = 3;
-    int i;
+    const char *codec_selection_arr[] = { "JPG", "PNG", "PNM", "BMP" };
+    const char *encoder_arr[] = { "jpegenc", "pngenc", "pnmenc", "" };
+    const int codec_max = 4;
+    const int bmp_idx = 3;
+    int codec_idx;
     char *s, lwr[4];
 
     /* Initial */
     memset(&(app_data->gst_objs), 0, sizeof(app_gst_objs));
 
-    /* Determine which image encoder factory to use (bmp will be special later conversion) */
-    i = 0;
+    // Determine which image encoder factory to use 
+    // (BMP is a special conversion. There is no encoder, so we have to use a gdkpixbuf instead)
 
-    for(i = 0; i < codec_max; i++)
+    codec_idx = 0;
+
+    for(codec_idx = 0; codec_idx < codec_max; codec_idx++)
     {
-    	if (strcmp(app_data->image_type, codec_selection_arr[i]) == 0)
+    	if (strcmp(app_data->image_type, codec_selection_arr[codec_idx]) == 0)
 	    break;
     }
 
-    if (i >= codec_max)
+    if (codec_idx >= codec_max)
     {
 	app_msg("MSG0001", "Image Type", m_ui->window);
     	return FALSE;
@@ -392,11 +394,19 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     if (! create_element(&(app_data->gst_objs.v_convert), "videoconvert", "v_convert", NULL, m_ui))
     	return FALSE;
 
-    if (! create_element(&(app_data->gst_objs.encoder), encoder_arr[i], "encoder", app_data, m_ui))
-    	return FALSE;
+    if (codec_idx != bmp_idx)
+    {
+	if (! create_element(&(app_data->gst_objs.encoder), encoder_arr[codec_idx], "encoder", app_data, m_ui))
+	    return FALSE;
 
-    if (! create_element(&(app_data->gst_objs.mf_sink), "multifilesink", "file_sink", NULL, m_ui))
-    	return FALSE;
+	if (! create_element(&(app_data->gst_objs.mf_sink), "multifilesink", "file_sink", NULL, m_ui))
+	    return FALSE;
+    }
+    else
+    {
+	if (! create_element(&(app_data->gst_objs.px_buf), "gdkpixbufsink", "pixbuf", app_data, m_ui))
+	    return FALSE;
+    }
 
     /* Create the pipeline */
     app_data->c_pipeline = gst_pipeline_new ("video_convert");
@@ -411,10 +421,27 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     g_object_set (app_data->gst_objs.file_src, "location", app_data->video_fn, NULL);
 
     s = (char *) malloc(strlen(app_data->output_dir) + strlen(app_data->img_prefix) + 10);
-    strlower((char *) codec_selection_arr[i], lwr);
+    strlower((char *) codec_selection_arr[codec_idx], lwr);
     sprintf(s, "%s/%s%%05d.%s", app_data->output_dir, app_data->img_prefix, lwr);
     g_object_set (app_data->gst_objs.mf_sink, "location", s, "post-messages", TRUE, NULL);
     free(s);
+
+    switch (codec_idx)
+    {
+    	case 0:
+	    g_object_set (app_data->gst_objs.encoder, "quality", (gint) 90, NULL);		// jpg
+	    break;
+    	case 1:
+	    g_object_set (app_data->gst_objs.encoder, "compression-level", (guint) 6, NULL);	// png
+	    break;
+    	case 2:
+	    g_object_set (app_data->gst_objs.encoder, "ascii", (gboolean) FALSE, NULL);		// pnm -> bmp
+	    break;
+    	case 3:
+	    break; 										// bmp
+    	default:
+	    return FALSE;
+    }
 
     if (app_data->frame_interval > 1)
 	g_object_set (app_data->gst_objs.v_rate, "rate", (gdouble) app_data->frame_interval, NULL);
@@ -424,9 +451,13 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     				app_data->gst_objs.file_src, 
     				app_data->gst_objs.v_decode, 
     				app_data->gst_objs.v_convert, 
-    				app_data->gst_objs.encoder, 
     				app_data->gst_objs.mf_sink, 
     				NULL);
+
+    if (codec_idx == bmp_idx)
+	gst_bin_add (GST_BIN (app_data->c_pipeline), app_data->gst_objs.px_buf); 
+    else
+	gst_bin_add (GST_BIN (app_data->c_pipeline), app_data->gst_objs.encoder); 
 
     if (app_data->frame_interval > 1)
 	gst_bin_add (GST_BIN (app_data->c_pipeline), app_data->gst_objs.v_rate); 
@@ -451,10 +482,21 @@ int link_pipeline(AppData *app_data, MainUi *m_ui)
 	return FALSE;
     }
 
-    if (gst_element_link (gst_objs->v_convert, gst_objs->encoder) != TRUE)
+    if (gst_objs->encoder)
     {
-	app_msg("MSG9010", NULL, m_ui->window);
-	return FALSE;
+	if (gst_element_link (gst_objs->v_convert, gst_objs->encoder) != TRUE)
+	{
+	    app_msg("MSG9010", NULL, m_ui->window);
+	    return FALSE;
+	}
+    }
+    else
+    {
+	if (gst_element_link (gst_objs->v_convert, gst_objs->px_buf) != TRUE)
+	{
+	    app_msg("MSG9010", NULL, m_ui->window);
+	    return FALSE;
+	}
     }
 
     if (gst_element_link (gst_objs->encoder, gst_objs->mf_sink) != TRUE)
@@ -678,7 +720,15 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 
 	case GST_MESSAGE_ELEMENT:
 	    if (GST_MESSAGE_SRC (msg) == GST_OBJECT (app_data->gst_objs.mf_sink))
+	    {
 	    	m_ui->img_file_count++;
+	    }
+
+	    else if (gst_message_has_name (msg, "pixbuf"))
+	    {
+		const GstStructure *pxbufstr = gst_message_get_structure (msg);
+		const GValue *pxbuf = gst_structure_get_value (pxbufstr, "pixbuf");
+	    }
 	     
 	    break;
 
