@@ -489,6 +489,12 @@ int link_pipeline(AppData *app_data, MainUi *m_ui)
 	    app_msg("MSG9010", NULL, m_ui->window);
 	    return FALSE;
 	}
+
+	if (gst_element_link (gst_objs->encoder, gst_objs->mf_sink) != TRUE)
+	{
+	    app_msg("MSG9010", NULL, m_ui->window);
+	    return FALSE;
+	}
     }
     else
     {
@@ -497,12 +503,6 @@ int link_pipeline(AppData *app_data, MainUi *m_ui)
 	    app_msg("MSG9010", NULL, m_ui->window);
 	    return FALSE;
 	}
-    }
-
-    if (gst_element_link (gst_objs->encoder, gst_objs->mf_sink) != TRUE)
-    {
-	app_msg("MSG9010", NULL, m_ui->window);
-	return FALSE;
     }
 
     if (app_data->frame_interval > 1)
@@ -727,7 +727,10 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    else if (gst_message_has_name (msg, "pixbuf"))
 	    {
 		const GstStructure *pxbufstr = gst_message_get_structure (msg);
-		const GValue *pxbuf = gst_structure_get_value (pxbufstr, "pixbuf");
+		//const GValue *pxbuf = gst_structure_get_value (pxbufstr, "pixbuf");
+		const GdkPixbuf *pxbuf = (GdkPixbuf *) gst_structure_get_value (pxbufstr, "pixbuf");
+		gboolean gdk_pixbuf_save (pxbuf, const char* filename, "bmp", GError** error, NULL);
+)
 	    }
 	     
 	    break;
