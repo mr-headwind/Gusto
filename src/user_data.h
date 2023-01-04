@@ -71,6 +71,7 @@ typedef struct _AppData
     gint64 time_start;	    		/* Collect frames for a time interval */
     gint64 time_duration;	    	/* Time period */
     gchar *output_dir;			/* Directory to hold output image files */
+    gchar *filenm_tmpl;			/* Image filename template */
     char *image_type;	    		/* Image type (jpg, png, pnm, bmp) */
     char *img_prefix;			/* Prefix to use for image file names */
 

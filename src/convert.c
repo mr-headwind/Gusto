@@ -354,7 +354,7 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     const int codec_max = 4;
     const int bmp_idx = 3;
     int codec_idx;
-    char *s, lwr[4];
+    char lwr[4];
 
     /* Initial */
     memset(&(app_data->gst_objs), 0, sizeof(app_gst_objs));
@@ -420,11 +420,12 @@ int set_elements(AppData *app_data, MainUi *m_ui)
     /* Populate the gst elements as required */
     g_object_set (app_data->gst_objs.file_src, "location", app_data->video_fn, NULL);
 
-    s = (char *) malloc(strlen(app_data->output_dir) + strlen(app_data->img_prefix) + 10);
+    app_data->filenm_tmpl = (char *) malloc(strlen(app_data->output_dir) + strlen(app_data->img_prefix) + 10);
     strlower((char *) codec_selection_arr[codec_idx], lwr);
-    sprintf(s, "%s/%s%%05d.%s", app_data->output_dir, app_data->img_prefix, lwr);
-    g_object_set (app_data->gst_objs.mf_sink, "location", s, "post-messages", TRUE, NULL);
-    free(s);
+    sprintf(app_data->filenm_tmpl, "%s/%s%%10d.%s", app_data->output_dir, app_data->img_prefix, lwr);
+
+    if (codec_idx != bmp_idx)
+	g_object_set (app_data->gst_objs.mf_sink, "location", app_data->filenm_tmpl, "post-messages", TRUE, NULL);
 
     switch (codec_idx)
     {
@@ -726,11 +727,18 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 
 	    else if (gst_message_has_name (msg, "pixbuf"))
 	    {
+		GError *err = NULL;
+		char *fn;
+		gboolean r;
+
 		const GstStructure *pxbufstr = gst_message_get_structure (msg);
 		//const GValue *pxbuf = gst_structure_get_value (pxbufstr, "pixbuf");
 		const GdkPixbuf *pxbuf = (GdkPixbuf *) gst_structure_get_value (pxbufstr, "pixbuf");
-		gboolean gdk_pixbuf_save (pxbuf, const char* filename, "bmp", GError** error, NULL);
-)
+		fn = (char *) malloc(strlen(app_data->filenm_tmpl) + 10);
+		sprintf(fn, app_data->filenm_tmpl, m_ui->img_file_count);
+		r = gdk_pixbuf_save ((GdkPixbuf *) pxbuf, (const char *) fn, "bmp", &err, NULL);
+	    	m_ui->img_file_count++;
+	    	free(fn);
 	    }
 	     
 	    break;
