@@ -422,7 +422,7 @@ int set_elements(AppData *app_data, MainUi *m_ui)
 
     app_data->filenm_tmpl = (char *) malloc(strlen(app_data->output_dir) + strlen(app_data->img_prefix) + 10);
     strlower((char *) codec_selection_arr[codec_idx], lwr);
-    sprintf(app_data->filenm_tmpl, "%s/%s%%10d.%s", app_data->output_dir, app_data->img_prefix, lwr);
+    sprintf(app_data->filenm_tmpl, "%s/%s%%010d.%s", app_data->output_dir, app_data->img_prefix, lwr);
 
     if (codec_idx != bmp_idx)
 	g_object_set (app_data->gst_objs.mf_sink, "location", app_data->filenm_tmpl, "post-messages", TRUE, NULL);
@@ -734,19 +734,12 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 		const GstStructure *pxbufstr = gst_message_get_structure (msg);
 		const GValue *val = gst_structure_get_value (pxbufstr, "pixbuf");
 		GdkPixbuf *pxbuf = GDK_PIXBUF(g_value_dup_object(val));
-    if (GDK_IS_PIXBUF(pxbuf))
-	printf("Yep pxbuf is pixbuf\n");
-    else
-	printf("Nope pxbuf is not pixbuf\n");
 
-		/*
-		const GdkPixbuf *pxbuf = (GdkPixbuf *) gst_structure_get_value (pxbufstr, "pixbuf");
 		fn = (char *) malloc(strlen(app_data->filenm_tmpl) + 10);
 		sprintf(fn, app_data->filenm_tmpl, m_ui->img_file_count);
 		r = gdk_pixbuf_save ((GdkPixbuf *) pxbuf, (const char *) fn, "bmp", &err, NULL);
+		g_object_unref(pxbuf);
 	    	m_ui->img_file_count++;
-	    	free(fn);
-	    	*/
 	    }
 	     
 	    break;
