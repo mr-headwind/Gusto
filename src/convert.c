@@ -1179,13 +1179,12 @@ void * monitor_posts(void *arg)
     int last_count = 0;
     char new_status[150];
     guint frames_to_convert;
-    int add_fr;
+    int add_fr, rem;
     
     /* Base information text */
     ret_mon = TRUE;
     m_ui = (MainUi *) arg;
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
-    frames_to_convert = m_ui->no_of_frames / (guint) app_data->frame_interval; 
 
     switch(app_data->interval_type)
     {
@@ -1194,6 +1193,11 @@ void * monitor_posts(void *arg)
 	    break;
 	case 1:				// Convert a selection of frames
 	    frames_to_convert = m_ui->no_of_frames / (guint) app_data->frame_interval; 
+
+	    rem = m_ui->no_of_frames % (guint) app_data->frame_interval; 
+
+	    if (rem > 0)
+		frames_to_convert++;
 	    break;
 	case 2:				// Convert frames for time period (minutes)
 	    if (app_data->time_duration == 0)
