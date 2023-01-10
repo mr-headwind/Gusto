@@ -1192,12 +1192,7 @@ void * monitor_posts(void *arg)
 	    frames_to_convert = m_ui->no_of_frames;
 	    break;
 	case 1:				// Convert a selection of frames
-	    frames_to_convert = m_ui->no_of_frames / (guint) app_data->frame_interval; 
-
-	    rem = m_ui->no_of_frames % (guint) app_data->frame_interval; 
-
-	    if (rem > 0)
-		frames_to_convert++;
+	    frames_to_convert = (m_ui->no_of_frames / (guint) app_data->frame_interval) + 1; 
 	    break;
 	case 2:				// Convert frames for time period (minutes)
 	    if (app_data->time_duration == 0)
