@@ -33,12 +33,12 @@ cp -p $HOME/$Dev/Gusto/src/*.c .
 cp -p $HOME/$Dev/Gusto/src/*.h .
 
 cd ../data
-ln -s $HOME/$Dev/Gusto/AutoTools/data/Gusto.1 .
-ln -s $HOME/$Dev/Gusto/AutoTools/data/Gusto.desktop .
+ln -s $HOME/$Dev/Gusto/AutoTools/data/gusto.1 .
+ln -s $HOME/$Dev/Gusto/AutoTools/data/gusto.desktop .
 ln -s $HOME/$Dev/Gusto/AutoTools/data/Makefile.am .
 
 cd icons
-ln -s $HOME/$Dev/Gusto/AutoTools/data/icons/Gusto.png .
+ln -s $HOME/$Dev/Gusto/AutoTools/data/icons/gusto.png .
 ln -s $HOME/$Dev/Gusto/AutoTools/data/icons/Makefile.am .
 
 cd ../..
