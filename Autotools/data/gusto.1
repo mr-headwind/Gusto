@@ -1,53 +1,32 @@
-.\Man page for AstroCTC
-.TH AstroCTC 1 2016-03-18
+.\Man page for Gusto
+.TH Gusto 1 2023-01-30
 .SH NAME
-astroctc \- A Planetary and Lunar imaging program (GTK+, GStreamer, V4L2)
+Gusto \- A program to convert video or sections of a video to images (GTK+, GStreamer)
 .SH SYNOPSIS
-.B astroctc
+.B Gusto
 .SH DESCRIPTION
-\fBastroctc\fR (Astronomy CCD in Telescope Capture) is designed for video and 
-image capture of the Planets and the Moon. A dedicated or modified astronomy 
-device will give the best results, however it should work with any device
-as long as the driver is Video4Linux2 compliant.
+\fBGusto\fR Gusto is intended to convert video to images. 
+It is possible to convert a complete video or a(time based) section of a video 
+or you may also convert selected frames.
 
-Numerous video and image formats are available, however only basic FITS support is
-provided.
-
-While astroctc is primarily for use in astronomy, it also serves well as a general
-viewing program.
+Numerous video and image formats are provided for.
 .SH OPTIONS
-astroctc has no options
+Gusto has no options
 .SH EXIT STATUS
-On success astroctc will exit(0); on error it will exit(-1). Futher details will
-be in the log file.
+On success Gusto will exit(0); on error it will exit(-1). 
 .SH FILES
 .TP
-$HOME/.AstroCTC/AstroCTC.log 
-Logs all messages, errors, events (viewable in GUI)
-.TP
-$HOME/.AstroCTC/cam_info
-Capabilities of the latest device used (viewable in GUI)
-.TP
-$HOME/.AstroCTC/user_preferences
-Application preferences (set up in GUI)
-.TP
-$HOME/.AstroCTC/Profiles
-Preset Profile settings may be named and saved within the GUI.
-All will stored in the Profiles directory. (viewable in GUI)
-.TP
-$HOME/.AstroCTC/Profiles/Last_Session
-Settings used in previous session. (default profile in GUI)
-.TP
-$HOME/AstroCTC_Captures
-Default directory to store captures (configurable in GUI)
+Image files 
+All image output is placed in the directory specified and images are named 
+with the selected prefix. Defaults are preset. 
 .SH BUGS
-On some computers and some cameras (and sometimes), changing the resolution of the 
-video area will work the first time, but subsequent changes will be unpredictabe. 
-The work-around is to select 'Camera' -> 'Restart Video' on the menu.
+Gusto is currently Beta software and is reasonably stable. However bugs may be 
+encountered from time to time. Should this happen, please provide details to the 
+author. 
 
-There is an occasional error when astroctc is run for the first time in a session 
+There is an occasional error when Gusto is run for the first time in a session 
 where the program aborts with a core dump. This appears to be a problem with the 
 driver and the camera not being ready. Running again usually works, but the transient 
 nature makes this difficult to narrow down.
 .SH AUTHOR
-astroctc and this manual page were written by Anthony Buckley <astroctc_AB@gmail.com>
+Gusto and this manual page were written by Anthony Buckley <Gusto_AB@gmail.com>
