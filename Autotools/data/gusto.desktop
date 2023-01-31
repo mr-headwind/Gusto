@@ -1,11 +1,11 @@
 [Desktop Entry]
-Name=AstroCTC Astronomy Image Capture
-_Comment=A program to capture Planetary and Lunar images
-TryExec=astroctc
-Exec=astroctc
-Icon=/usr/share/pixmaps/astroctc/astroctc.png
+Name=Gusto Video to Image Conversion
+_Comment=A program to convert video to images
+TryExec=gusto
+Exec=gusto
+Icon=/usr/share/pixmaps/gusto/gusto.png
 Terminal=false
 Type=Application
-Keywords=video;astronomy;image;webcam;
-Categories=Video;Astronomy;
+Keywords=video;conversion;image;
+Categories=Video;Image;
 StartupNotify=true
