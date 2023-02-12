@@ -85,7 +85,7 @@ fi
 if test "x${not_inst}" != x; then
   echo "------------------------------------------"
   echo " Unable to find one or more libraries and/or header files on this system.  "
-  echo " The following will need to be installed to build AstroCTC:  "
+  echo " The following will need to be installed to build Gusto:  "
   echo ${not_inst}
 
   echo " "
@@ -97,7 +97,7 @@ fi
 # pkg-config module checks for cflags and linker flags
 PKG_PROG_PKG_CONFIG
 
-PKG_CHECK_MODULES([X], [gtk+-3.0 gstreamer-1.0 gstreamer-video-1.0])
+PKG_CHECK_MODULES([X], [gtk+-3.0 gstreamer-1.0 gstreamer-video-1.0 gstreamer-pbutils-1.0])
 
 
 # Checks for typedefs, structures, and compiler characteristics.
