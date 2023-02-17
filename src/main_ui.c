@@ -180,7 +180,7 @@ void set_heading_widgets(MainUi *m_ui)
 
     create_label(&(m_ui->hdg_lbl), "title_2", "Gusto video frame convert to image", m_ui->hdg_hbox);
 
-    s = (char *) malloc(11 + strlen(VERSION));
+    s = (char *) malloc(15 + strlen(VERSION));
     sprintf(s, "(Version: %s)", VERSION);
     create_label(&(m_ui->version_lbl), "title_3", s, m_ui->hdg_hbox);
     gtk_widget_set_valign(m_ui->version_lbl, GTK_ALIGN_END);
