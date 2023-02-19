@@ -206,7 +206,7 @@ void css_adjust_font_sz(char **css)
 {
     int i, j, fn_len, new_fn_len;
     char *p, *p_new, *p_fhd;
-    char num[4];
+    char num[15];
 
     /* Copy to a new css string and extract and adjust the font size */
     *css = (char *) malloc(strlen(css_data_fhd) + 1);
