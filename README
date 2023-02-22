@@ -20,7 +20,7 @@
 
  DESCRIPTION
  -----------
-    Gusto is an application designed to convert video to indivual images. It is posssible to convert
+    Gusto is an application designed to convert video to individual images. It is possible to convert
     and entire video, a section of a video (seconds or minutes) or selected frames of a video.
     Multiple formats for input and output are provided for.
 
@@ -68,8 +68,6 @@
         sudo apt-get install gstreamer1.0*
         sudo apt-get install gstreamer-video-1.0
         sudo apt-get install gstreamer-pbutils-1.0
-        sudo apt-get install gstreamer-tools
-        sudo apt-get install libgstreamer-plugins-base1.0-dev
     
     Additionally the following libraries are required and _MAY_ need installation if 
     dependencies cannot be resolved on installation:-
