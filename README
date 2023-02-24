@@ -21,7 +21,7 @@
  DESCRIPTION
  -----------
     Gusto is an application designed to convert video to individual images. It is possible to convert
-    and entire video, a section of a video (seconds or minutes) or selected frames of a video.
+    an entire video, a section of a video (seconds or minutes) or selected frames of a video.
     Multiple formats for input and output are provided for.
 
  INSTALL
