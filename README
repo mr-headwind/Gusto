@@ -32,12 +32,12 @@
     This is probably the easiest and best way for installation.
 
     Download the latest distribution archive from here: 
-    	https://github.com/mr-headwind/Gusto/tree/master/DIST_PACKAGES 
+    	https://github.com/mr-headwind/gusto/tree/master/DIST_PACKAGES 
     to your download directory (eg. $HOME/Downloads).
 
     Start a terminal or xterm session
     cd $HOME/Downloads (or your download directory)
-    tar xvzf Gusto-x.xx.tar.gz (where x.xx is the version number)
+    tar xvzf gusto-x.xx.tar.gz (where x.xx is the version number)
     ./configure --prefix=/usr
     make
     sudo make install
@@ -54,8 +54,8 @@
 
     Download the binary for your environment to your preferred download directory.
     Install the package using your preferred package manager / installer. 
-        eg. sudo gdebi Gusto-n.nn_amd64.deb   (you may need:  'sudo apt install gdebi-core' first)
-        or  sudo dpkg -i Gusto-n.nn_amd64.deb   followed by  'sudo apt-get install -f'
+        eg. sudo gdebi gusto-n.nn_amd64.deb   (you may need:  'sudo apt install gdebi-core' first)
+        or  sudo dpkg -i gusto-n.nn_amd64.deb   followed by  'sudo apt-get install -f'
 
  DEPENDENCIES
  ------------
