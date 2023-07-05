@@ -1,0 +1,82 @@
+ LICENSE
+ -------
+    Copyright (C) 2023 Anthony Buckley
+
+    This file is part of Gusto.
+
+    Gusto is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Gusto is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Gusto.  If not, see <http://www.gnu.org/licenses/>.
+
+
+ DESCRIPTION
+ -----------
+    Gusto is an application designed to convert video to individual images. It is possible to convert
+    an entire video, a section of a video (seconds or minutes) or selected frames of a video.
+    Multiple formats for input and output are provided for.
+
+ INSTALL
+ -------
+
+ 1. DISTRIBUTION PACKAGE
+ -----------------------
+    This is probably the easiest and best way for installation.
+
+    Download the latest distribution archive from here: 
+    	https://github.com/mr-headwind/gusto/tree/master/DIST_PACKAGES 
+    to your download directory (eg. $HOME/Downloads).
+
+    Start a terminal or xterm session
+    cd $HOME/Downloads (or your download directory)
+    tar xvzf gusto-x.xx.tar.gz (where x.xx is the version number)
+    ./configure --prefix=/usr
+    make
+    sudo make install
+
+    The following sections may help if you encounter problems during this process.
+
+ 2. DEB PACKAGE
+ --------------
+    A binary deb package file may be available on SourceForge at:-
+
+	https://sourceforge.net/projects/Gusto/?source=directory
+
+    or go to the SourceForge home page and search for 'Gusto'.
+
+    Download the binary for your environment to your preferred download directory.
+    Install the package using your preferred package manager / installer. 
+        eg. sudo gdebi gusto-n.nn_amd64.deb   (you may need:  'sudo apt install gdebi-core' first)
+        or  sudo dpkg -i gusto-n.nn_amd64.deb   followed by  'sudo apt-get install -f'
+
+ DEPENDENCIES
+ ------------
+    The GTK+ 3.0 libraries need to be installed and, for the most part,
+    will likely already be present. However, if there is a problem, try:
+    	sudo apt-get build-dep libgtk-3-dev 
+	sudo apt-get update
+	sudo add-apt-repository ppa:gstreamer-developers/ppa
+        sudo apt-get update
+        sudo apt-get install gstreamer1.0*
+        sudo apt-get install gstreamer-video-1.0
+        sudo apt-get install gstreamer-pbutils-1.0
+    
+    Additionally the following libraries are required and _MAY_ need installation if 
+    dependencies cannot be resolved on installation:-
+    	libpthread-stubs0-dev
+    	libjpeg-dev
+    	libpng-dev
+
+ BUGS & SUGGESTIONS
+ ------------------
+    Email any bugs, requests or suggestions to tony.buckley0000@gmail.com
+    Please note that this address is infreqently monitored so emails may not be immediately actioned.
+
