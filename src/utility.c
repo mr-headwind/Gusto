@@ -552,9 +552,15 @@ int make_dir(char *s)
 {
     int err;
 
-    if ((err = mkdir(s, 0700)) != 0)
+    #ifdef __linux__
+	err = mkdir(s, 0700);
+    #else
+	err = mkdir(s);
+    #endif
+
+    if (err != 0)
     {
-	app_msg("MSG99008", s, NULL);
+	app_msg("MSG9008", s, NULL);
 	return FALSE;
     }
 

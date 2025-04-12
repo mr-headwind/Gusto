@@ -46,21 +46,23 @@
 
 /* Prototypes */
 
+void OnVideo(GtkWidget*, gpointer);
 void OnConvert(GtkWidget*, gpointer);
 void OnVideoBrowse(GtkWidget*, gpointer);
 void OnDirBrowse(GtkWidget*, gpointer);
-gboolean OnVideoIn(GtkWidget*, GdkEvent *, gpointer);
-gboolean OnVideoSet(GtkWidget*, GdkEvent *, gpointer);
 void OnFrameSet(GtkWidget *, gpointer);
+void OnReset(GtkWidget*, gpointer);
 void OnQuit(GtkWidget*, gpointer);
 
 
-extern void video_select(AppData *, MainUi *);
+extern void video_select(MainUi *);
 extern void output_dir_select(AppData *, MainUi *);
 extern int check_make_dir(char *, GtkWidget *);
 extern void set_convert_widgets(AppData *, MainUi *);
+extern void video_info(AppData *, MainUi *);
 extern void video_convert(AppData *, MainUi *);
 extern int get_video_data(AppData *, MainUi *);
+extern void reset_form(AppData *, MainUi *);
 extern void free_window_reg();
 extern void close_open_ui();
 extern int is_ui_reg(char *, int);
@@ -76,6 +78,24 @@ static const char *debug_hdr = "DEBUG-callbacks.c ";
 
 
 /* Callbacks */
+
+
+/* Callback - Retrieve the video details */
+
+void OnVideo(GtkWidget *btn, gpointer user_data)
+{  
+    MainUi *m_ui;
+    AppData *app_data;
+
+    /* Get data */
+    m_ui = (MainUi *) user_data;
+    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
+
+    /* Video Information */
+    video_info(app_data, m_ui);
+
+    return;
+}  
 
 
 /* Callback - Convert the video to images */
@@ -101,14 +121,12 @@ void OnConvert(GtkWidget *btn, gpointer user_data)
 void OnVideoBrowse(GtkWidget *btn, gpointer user_data)
 {  
     MainUi *m_ui;
-    AppData *app_data;
 
     /* Get data */
     m_ui = (MainUi *) user_data;
-    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
 
     /* Select video */
-    video_select(app_data, m_ui);
+    video_select(m_ui);
 
     return;
 }  
@@ -132,54 +150,6 @@ void OnDirBrowse(GtkWidget *btn, gpointer user_data)
 }  
 
 
-/* Callback - Focus in on Video filename - save to check for change on focus out */
-
-gboolean OnVideoIn(GtkWidget *fn, GdkEvent *ev, gpointer user_data)
-{  
-    MainUi *m_ui;
-    AppData *app_data;
-
-    /* Get data */
-    m_ui = (MainUi *) user_data;
-    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
-
-    /* Save temporary copy of contents */
-    app_data->video_fn_tmp = (char *) malloc(strlen(gtk_entry_get_text(GTK_ENTRY (m_ui->fn))) + 1);
-    strcpy(app_data->video_fn_tmp, gtk_entry_get_text(GTK_ENTRY (m_ui->fn)));
-
-    return FALSE;
-}  
-
-
-/* Callback - Focus out on Video filename being entered */
-
-gboolean OnVideoSet(GtkWidget *fn, GdkEvent *ev, gpointer user_data)
-{  
-    MainUi *m_ui;
-    AppData *app_data;
-
-    /* Get data */
-    m_ui = (MainUi *) user_data;
-
-    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
-
-    /* Check for changes */
-    if (strcmp(app_data->video_fn_tmp, gtk_entry_get_text(GTK_ENTRY (m_ui->fn))) == 0)
-    {
-    	free(app_data->video_fn_tmp);
-    	return FALSE;
-    }
-    
-    free(app_data->video_fn_tmp);
-    app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
-
-    /* Video information */
-    get_video_data(app_data, m_ui);
-
-    return FALSE;
-}  
-
-
 /* Callback - Select the type of frame conversion */
 
 void OnFrameSet(GtkWidget *cbx, gpointer user_data)
@@ -198,13 +168,45 @@ void OnFrameSet(GtkWidget *cbx, gpointer user_data)
 }  
 
 
+/* Callback - Reset */
+
+void OnReset(GtkWidget *window, gpointer user_data)
+{  
+    MainUi *m_ui;
+    AppData *app_data;
+
+    /* Get data */
+    m_ui = (MainUi *) user_data;
+    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
+
+    /* Reset all fields to default */
+    reset_form(app_data, m_ui);
+
+    return;
+}  
+
+
 /* Callback - Quit */
 
 void OnQuit(GtkWidget *window, gpointer user_data)
 {  
+    MainUi *m_ui;
+    AppData *app_data;
+
+    /* Get data */
+    app_data = (AppData *) g_object_get_data (G_OBJECT (window), "app_data");
+    m_ui = (MainUi *) g_object_get_data (G_OBJECT (window), "ui");
+
     /* Close any open windows */
     close_open_ui();
     free_window_reg();
+
+    /* Free file names */
+    free(app_data->video_fn);
+    free(app_data->video_fn_last);
+
+    if (m_ui->convbtn_bg_color != NULL)
+	gdk_rgba_free(m_ui->convbtn_bg_color);
 
     /* Main quit */
     gtk_main_quit();

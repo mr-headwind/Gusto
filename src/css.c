@@ -45,6 +45,7 @@
 #include <stdlib.h>
 #include <gtk/gtk.h>  
 #include <gdk/gdk.h> 
+#include <main.h>
 
 
 /* Prototypes */
@@ -53,6 +54,8 @@ void set_css();
 char * check_screen_res(int *);
 void get_screen_res(GdkRectangle *);
 void css_adjust_font_sz(char **);
+void css_set_button_status(GtkWidget *, int, gchar *);
+GdkRGBA * css_get_bg_colour(GtkWidget *);
 
 
 /* Globals */
@@ -76,6 +79,9 @@ static const char *debug_hdr = "DEBUG-css.c ";
 **              #cbd8fb : Light blue
 **              #ffd6d6 : Light red
 **              #000000 : Light black
+**              #e6f3ff : Very light blue
+**              #ffe6e6 : Very light red
+**              #e6ffe6 : Very light green
 */
 
 static char *css_data_fhd = 
@@ -98,8 +104,11 @@ static char *css_data_fhd =
 	"frame > label { color: #800000; font-weight: 500; }"
 	"combobox * { color: @METAL_GREY; font-family: Sans; font-size: 12px; }"
 	"progressbar#pbar_1 { color: @DARK_BLUE; font-family: Sans; font-size: 10px; }"
-	"#button_1 * { color: #708090; font-weight: bold; font-size: 14px; }"
-	"#button_2 * { color: #800000; font-size: 14px; }"
+	"button#button_video { color: #708090; font-weight: bold; font-size: 14px; background-color: \
+			       #e6ffe6; border-image: none; background-image: none;}"
+	"button#button_conv { color: #708090; font-weight: bold; font-size: 14px; }"
+	"button#button_reset { color: #708090; font-weight: bold; font-size: 14px; }"
+	"button#button_close * { color: #800000; font-size: 14px; }"
 	"notebook * { font-family: Sans; font-size: 11px; }"
 	"textview { font-family: Sans; font-size: 14px; }"
 	"textview text { font-family: Sans; font-size: 12px; }"
@@ -268,4 +277,75 @@ void css_adjust_font_sz(char **css)
     //printf("%s new css is: %s\n", debug_hdr, *css); fflush(stdout);
 
     return;
+}
+
+
+/* Set up css for button status */
+
+void css_set_button_status(GtkWidget *btn, int btn_status, gchar *rgba)
+{ 
+    char bg_colour[8], css_text[160];
+    const gchar *nm;
+
+    // Get the name
+    nm = gtk_widget_get_name(GTK_WIDGET (btn));
+
+    /* Set the appropriate colour and set the provider string */
+    switch (btn_status)
+    {
+    	case 1:
+	    strcpy(bg_colour, "#e6ffe6");	// Ready to be selected (green)
+	    sprintf(css_text, " button#%s { color: #708090; font-weight: bold; font-size: 14px; "
+			      "background-color: %s; border-image: none;  background-image: none; }", nm, bg_colour);
+	    break;
+    	case 2:
+	    strcpy(bg_colour, "#e6f3ff");	// Finished (blue)
+	    sprintf(css_text, " button#%s { color: #708090; font-weight: bold; font-size: 14px; "
+			      "background-color: %s; border-image: none;  background-image: none; }", nm, bg_colour);
+	    break;
+    	case 3:
+	    if (rgba != NULL)
+	    {	
+		sprintf(css_text, " button#%s { color: #708090; font-weight: bold; font-size: 14px; "
+				  "background-color: %s; border-image: none;  background-image: none; }", nm, rgba);
+		break;
+	    }
+	default:
+	    sprintf(css_text, " button#%s { color: #708090; font-weight: bold; font-size: 14px; }", nm);
+	    break;
+    };
+
+    // Need an object to store css information: the CSS Provider
+    GtkCssProvider * cssProvider = gtk_css_provider_new();
+
+    // Load CSS into the object ("-1" says, that the css string is \0-terminated)
+    gtk_css_provider_load_from_data(cssProvider, css_text, -1, NULL); 
+
+    // The "Style context" manages CSS providers (as there can be more of them)            
+    GtkStyleContext * context = gtk_widget_get_style_context(btn);   
+
+    // Add our CSS provider (that contains the CSS) to that "style manager".
+    gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(cssProvider),GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+    // Possibly not required
+    g_object_unref (cssProvider); 
+
+    return;
+}
+
+
+/* Save the background colour for a widget */
+
+GdkRGBA * css_get_bg_colour(GtkWidget *w)
+{ 
+    GtkStyleContext* style_context;
+    GdkRGBA *background_color = NULL;
+
+    style_context = gtk_widget_get_style_context (w);
+    gtk_style_context_get (style_context,
+			   gtk_style_context_get_state (style_context),
+			   GTK_STYLE_PROPERTY_BACKGROUND_COLOR, &background_color,
+			   NULL);
+
+    return background_color;
 }

@@ -38,7 +38,9 @@
 
 /* Includes */
 
+#ifdef __linux__
 #include <linux/videodev2.h>
+#endif
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/pbutils/pbutils.h>
@@ -65,7 +67,7 @@ typedef struct _AppData
     GstState state;                 	/* Current state of the pipeline */
     GstState init_state;                /* Start state of the pipeline, dependent on Interval */
     char *video_fn;			/* Video file name */
-    char *video_fn_tmp;			/* Temporary file name storage */
+    char *video_fn_last;		/* Last file name stored */
     int interval_type;	    		/* Type of frame conversion (eg. each frame or every n frames, time) */
     int frame_interval;	    		/* Interval (no. of frames) between conversions */
     gint64 time_start;	    		/* Collect frames for a time interval */
@@ -78,6 +80,7 @@ typedef struct _AppData
     guint fr_denom;			/* Frame rate demoninator */
     guint fr_num;			/* Frame rate numerator */
     gboolean seekable;			/* Is video seekable */
+    gboolean video_ok;			/* Is video discovery ok */
     GstClockTime video_duration;	/* Video length in nanoseconds */
     char *fmt_duration;			/* String duration */
     GstDiscoverer *discoverer;

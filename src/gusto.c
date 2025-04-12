@@ -61,7 +61,7 @@ extern void app_msg(char*, char *, GtkWidget *);
 /* Globals */
 
 static const char *debug_hdr = "DEBUG-Gusto.c ";
-
+char d_separator;
 
 /* Main program control */
 
@@ -95,8 +95,19 @@ void initialise(AppData *app_data, MainUi *m_ui)
     app_msg_extra[0] = '\0';
     memset(app_data, 0, sizeof (AppData));
     memset(m_ui, 0, sizeof (MainUi));
+    app_data->video_fn = (char *) malloc(2);
+    app_data->video_fn[0] = '\0';
+    app_data->video_fn_last = (char *) malloc(2);
+    app_data->video_fn_last[0] = '\0';
 
     app_msg("MSG9000", '\0', NULL);
+
+    /* Set the directory separator */
+    #ifdef __linux__
+	d_separator = '/';
+    #else
+	d_separator = '\\';
+    #endif
 
     return;
 }

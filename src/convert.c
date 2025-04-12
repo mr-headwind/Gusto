@@ -34,9 +34,15 @@
 /* Defines */
 #define MAX_RETRY 3
 
+#ifndef __linux__
+# define __USE_MINGW_ANSI_STDIO
+#endif
+
 
 /* Includes */
 #include <stdlib.h>  
+#include <limits.h>  
+#include <errno.h>  
 #include <string.h>  
 #include <libgen.h>  
 #include <gtk/gtk.h>  
@@ -50,11 +56,12 @@
 #include <user_data.h>
 #include <defs.h>
 #include <inttypes.h>
+#include <pthread.h>
 
 
 /* Prototypes */
 
-void video_select(AppData *, MainUi *);
+void video_select(MainUi *);
 void output_dir_select(AppData *, MainUi *);
 void set_convert_widgets(AppData *, MainUi *);
 int video_convert(AppData *, MainUi *);
@@ -86,6 +93,7 @@ extern void strlower(char *, char *);
 extern char * app_msg_text(char*, char *);
 extern int check_file(char *);
 extern int check_make_dir(char *, GtkWidget *);
+extern void css_set_button_status(GtkWidget *, int);
 
 
 /* Typedefs */
@@ -100,9 +108,24 @@ static int ret_mon;
 static int discover_retry, retry_count;
 
 
+/* Retrieve video information about a video file */
+
+void video_info(AppData *app_data, MainUi *m_ui)
+{  
+    /* Get video data */
+    if (get_video_data(app_data, m_ui) == FALSE)
+	return;
+
+    gtk_widget_set_sensitive (m_ui->convert_btn, TRUE);
+
+    return;
+
+}
+
+
 /* Browse and select a video file to convert */
 
-void video_select(AppData *app_data, MainUi *m_ui)
+void video_select(MainUi *m_ui)
 {  
     gint res;
     char *p;
@@ -113,10 +136,6 @@ void video_select(AppData *app_data, MainUi *m_ui)
     {
 	gtk_entry_set_text (GTK_ENTRY (m_ui->fn), p);
 	free(p);
-
-	/* Get video data */
-	if (get_video_data(app_data, m_ui) == FALSE)
-	    return;
     }
 
     return;
@@ -206,7 +225,7 @@ int get_user_data(AppData *app_data, MainUi *m_ui)
 {  
     gchar *s;
 
-    app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
+    app_data->video_fn = strdup((char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn)));
 
     if (*(app_data->video_fn) == '\0')
     {
@@ -825,6 +844,7 @@ if (gst_element_query_position (app_data->c_pipeline, GST_FORMAT_TIME, &pos)
 
 	    gst_object_unref (app_data->c_pipeline);
 	    gtk_label_set_text (GTK_LABEL (m_ui->status_info), "Finished converting video to images");
+	    css_set_button_status(m_ui->convert_btn, 2);
 	    break;
 
 	default:
@@ -880,29 +900,89 @@ int send_seek_event(AppData *app_data, MainUi *m_ui)
 int get_video_data(AppData *app_data, MainUi *m_ui)
 {  
     GError *err = NULL;
-    char *uri;
+    char *uri, *tmp_fn;
 
     /* Initial */
-    app_data->video_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
+    tmp_fn = (char *) gtk_entry_get_text(GTK_ENTRY (m_ui->fn));
     discover_retry = TRUE;
     retry_count = 0;
 
-    if (*(app_data->video_fn) == '\0')
+    if (*(tmp_fn) == '\0')
     {
-	app_msg("MSG0002", app_data->video_fn, m_ui->window);
+	app_msg("MSG0002", "Video file", m_ui->window);
 	return FALSE;
     }
 
     /* Check file is valid */
-    if (check_file(app_data->video_fn) == FALSE)
+    if (check_file(tmp_fn) == FALSE)
     {
 	app_msg("MSG0008", "Video file", m_ui->window);
 	return FALSE;
     }
 
+#ifdef __linux__
+    /* Need to get full path */
+    free(app_data->video_fn);
+    app_data->video_fn = realpath(tmp_fn, NULL);
+
+    if (app_data->video_fn == NULL)
+    {
+	sprintf(app_msg_extra, "File: %s - error: (%d) %s\n", tmp_fn, errno, strerror(errno));
+	app_msg("MSG0006", "Failed to get full path", m_ui->window);
+    	return errno;
+    }
+
+    /* Make sure the file name has changed */
+    if (strcmp(app_data->video_fn_last, app_data->video_fn) == 0)
+    	return FALSE;
+
+    app_data->video_fn_last = (char *) realloc(app_data->video_fn_last, strlen(app_data->video_fn) + 1);
+    strcpy(app_data->video_fn_last, app_data->video_fn);
+
     /* Set up the video file uri */
     uri = (char *) malloc(strlen(app_data->video_fn) + 8);
     sprintf(uri, "file://%s", app_data->video_fn);
+#else
+    int len, r, i;
+
+    /* Need to get full path */
+    len = GetFullPathName(tmp_fn, 0, NULL, NULL);
+
+    if (len == 0)
+    {
+	sprintf(app_msg_extra, "File: %s Error: zero length returned\n", tmp_fn);
+	app_msg("MSG0006", "Failed to get full path (length)", m_ui->window);
+	return FALSE;
+    }
+
+    app_data->video_fn = (char *) malloc(len + 1);
+
+    r = GetFullPathName(tmp_fn, len, app_data->video_fn, NULL);
+
+    if (r == 0)
+    {
+	sprintf(app_msg_extra, "File: %s Error: file error\n", tmp_fn);
+	app_msg("MSG0006", "Failed to get full path", m_ui->window);
+	return FALSE;
+    }
+
+    /* Make sure the file name has changed */
+    if (strcmp(app_data->video_fn_last, app_data->video_fn) == 0)
+    	return FALSE;
+
+    app_data->video_fn_last = (char *) realloc(app_data->video_fn_last, strlen(app_data->video_fn) + 1);
+    strcpy(app_data->video_fn_last, app_data->video_fn);
+
+    /* Set up the video file uri */
+    uri = (char *) malloc(len + 8);
+    sprintf(uri, "file:///%s", app_data->video_fn);
+
+    for(i = 0; i < strlen(uri); i++)
+    {
+    	if (*(uri + i) == '\\')
+	    *(uri + i) = '/';
+    }
+#endif
 
     /* Instantiate the Discoverer */
     while (discover_retry)
@@ -946,9 +1026,25 @@ int get_video_data(AppData *app_data, MainUi *m_ui)
 
 	/* Free resources */
 	g_object_unref (app_data->discoverer);
+	g_main_loop_unref (app_data->loop);
     }
 
     free(uri);
+    /*
+printf("%s get_video_data full path len: %d\n", debug_hdr, len); fflush(stdout);
+printf("%s get_video_data 1 full path %s\n", debug_hdr, rp); fflush(stdout);
+printf("%s get_video_data 1 URI - %s\n", debug_hdr, uri); fflush(stdout);
+printf("%s get_video_data 2 \n", debug_hdr); fflush(stdout);
+printf("%s get_video_data 3 \n", debug_hdr); fflush(stdout);
+printf("%s get_video_data 4 \n", debug_hdr); fflush(stdout);
+printf("%s get_video_data 5 \n", debug_hdr); fflush(stdout);
+printf("%s get_video_data 6 \n", debug_hdr); fflush(stdout);
+printf("%s get_video_data 6a \n", debug_hdr); fflush(stdout);
+printf("%s get_video_data 7 \n", debug_hdr); fflush(stdout);
+printf("%s get_video_data 7a \n", debug_hdr); fflush(stdout);
+printf("%s get_video_data 9a \n", debug_hdr); fflush(stdout);
+*/
+//printf("%s get_video_data 6 \n", debug_hdr); fflush(stdout);
 
     return TRUE;
 }
@@ -1104,18 +1200,21 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 
     app_data->video_duration =  gst_discoverer_info_get_duration (info);
     printf ("%" GST_TIME_FORMAT "%n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)), &len);
+    printf("\n"); fflush(stdout);
     app_data->fmt_duration =  (char *) malloc(len + 1);
     sprintf (app_data->fmt_duration, "%" GST_TIME_FORMAT "", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
 
     no_of_frames = (((double) app_data->video_duration / (double) GST_SECOND) * app_data->fr_num); 
     m_ui->no_of_frames = no_of_frames;
-    s = (char *) malloc(len + 80);
+    s = (char *) malloc(len + 150);
     sprintf(s, "Video duration: %s  (Approx. %u frames)\n" \
                "Seekable: %s\n" \
                "%u fps\n", app_data->fmt_duration, no_of_frames, seek_yn, app_data->fr_num);
     gtk_text_buffer_set_text (m_ui->txt_buffer, s, -1);
     free(s);
-    gtk_widget_set_sensitive (m_ui->convert_btn, TRUE);
+    free(app_data->fmt_duration);
+    app_data->video_ok = TRUE;
+    gtk_widget_show(m_ui->video_info_vbox);
 }
 
 
@@ -1124,8 +1223,12 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 static void on_start_cb (GstDiscoverer *discoverer, gpointer data)
 {
     MainUi *m_ui;
+    AppData *app_data;
 
     m_ui = (MainUi *) data;
+    app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
+
+    app_data->video_ok = FALSE;
     gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Getting Video information, please wait...");
 }
 
@@ -1140,9 +1243,18 @@ static void on_finished_cb (GstDiscoverer *discoverer, gpointer data)
     m_ui = (MainUi *) data;
     app_data = (AppData *) g_object_get_data (G_OBJECT (m_ui->window), "app_data");
 
-    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video discovering finished");
+    if (app_data->video_ok == TRUE)
+    {
+	gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video discovery finished, ready to Convert");
+	css_set_button_status(m_ui->video_btn, 2);
+	css_set_button_status(m_ui->convert_btn, 1);
+    }
+    else
+    {
+	gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Video discovery failed");
+    }
+
     g_main_loop_quit (app_data->loop);
-    g_main_loop_unref (app_data->loop);
 }
 
 
@@ -1213,7 +1325,11 @@ void * monitor_posts(void *arg)
 
     while(1)
     {
+#ifdef __linux__
     	usleep(500000); 
+#else
+	Sleep(500);
+#endif
 
     	/* Test for end of file */
 	if (! G_IS_OBJECT(app_data->c_pipeline))

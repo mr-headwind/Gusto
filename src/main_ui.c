@@ -58,6 +58,8 @@ void image_prefix_widgets(MainUi *);
 void video_convert_select_widgets(MainUi *);
 void video_info_widgets(MainUi *);
 void set_button_widgets(MainUi *);
+void reset_form(AppData *, MainUi *);
+
 
 void create_label(GtkWidget **, char *, char *, GtkWidget *);
 void create_label2(GtkWidget **, char *, char *, GtkWidget *, int, int, int, int);
@@ -71,21 +73,24 @@ GtkWidget * debug_cntr(GtkWidget *);
 extern void app_msg(char*, char *, GtkWidget *);
 extern void OnVideoBrowse(GtkWidget*, gpointer);
 extern void OnDirBrowse(GtkWidget*, gpointer);
-extern gboolean OnVideoIn(GtkWidget*, GdkEvent *, gpointer);
-extern gboolean OnVideoSet(GtkWidget*, GdkEvent *, gpointer);
 extern gboolean OnDirIn(GtkWidget*, GdkEvent *, gpointer);
 extern gboolean OnDirSet(GtkWidget*, GdkEvent *, gpointer);
 extern void OnFrameSet(GtkWidget*, gpointer);
+extern void OnVideo(GtkWidget*, gpointer);
 extern void OnConvert(GtkWidget*, gpointer);
+extern void OnReset(GtkWidget*, gpointer);
 extern void OnQuit(GtkWidget*, gpointer);
 extern void set_css();
 extern char * home_dir();
 extern GtkWidget * find_widget_by_name(GtkWidget *, char *);
+extern void css_set_button_status(GtkWidget *, int, gchar *);
+extern GdkRGBA * css_get_bg_colour(GtkWidget *);
 
 
 /* Globals */
 
 static const char *debug_hdr = "DEBUG-main_ui.c ";
+extern char d_separator;
 
 
 /* Create the user interface and set the CallBacks */
@@ -130,9 +135,11 @@ void main_ui(AppData *app_data, MainUi *m_ui)
     /* Show window */
     set_css();
     gtk_widget_show_all(m_ui->window);
+    m_ui->convbtn_bg_color = css_get_bg_colour(m_ui->convert_btn);
     gtk_widget_set_visible (m_ui->int_hbox, FALSE);
     gtk_widget_set_visible (m_ui->time_hbox, FALSE);
     gtk_widget_set_sensitive (m_ui->convert_btn, FALSE);
+    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Enter or Browse for a video file");
 
     return;
 }
@@ -207,8 +214,6 @@ void video_select_widgets(MainUi *m_ui)
     gtk_entry_set_text(GTK_ENTRY (m_ui->fn), home_dir(m_ui->window));
     gtk_widget_set_margin_left(m_ui->fn, 10);
     gtk_widget_set_margin_top (m_ui->fn, 5);
-    g_signal_connect(G_OBJECT (m_ui->fn), "focus-in-event", G_CALLBACK(OnVideoIn), m_ui);  
-    g_signal_connect(G_OBJECT (m_ui->fn), "focus-out-event", G_CALLBACK(OnVideoSet), m_ui);  
 
     m_ui->browse_video_btn = gtk_button_new_with_label("Browse...");
     gtk_widget_set_margin_left(m_ui->browse_video_btn, 10);
@@ -223,10 +228,10 @@ void video_select_widgets(MainUi *m_ui)
 
 void output_dir_widgets(MainUi *m_ui)
 {  
-    char *dir, *out_dir;
+    char *out_dir;
 
     out_dir = (char *) malloc(strlen(home_dir(m_ui->window)) + 8);
-    sprintf(out_dir, "%s/myimgs", home_dir(m_ui->window));
+    sprintf(out_dir, "%s%cmyimgs", home_dir(m_ui->window), d_separator);
 
     create_label2(&(m_ui->out_dir_lbl), "title_4", "Output Location", m_ui->fn_grid, 0, 1, 1, 1);
     gtk_widget_set_halign(m_ui->out_dir_lbl, GTK_ALIGN_END);
@@ -373,14 +378,24 @@ void set_button_widgets(MainUi *m_ui)
     gtk_widget_set_halign(m_ui->btn_hbox, GTK_ALIGN_CENTER);
     gtk_widget_set_margin_top(m_ui->btn_hbox, 30);
 
+    m_ui->video_btn = gtk_button_new_with_label("Check Video Info");
+    gtk_widget_set_name(m_ui->video_btn, "button_video");
+    g_signal_connect(m_ui->video_btn, "clicked", G_CALLBACK(OnVideo), m_ui);
+    gtk_box_pack_start (GTK_BOX (m_ui->btn_hbox), m_ui->video_btn, FALSE, FALSE, 0);
+
     m_ui->convert_btn = gtk_button_new_with_label("Convert");
-    gtk_widget_set_name(m_ui->convert_btn, "button_1");
+    gtk_widget_set_name(m_ui->convert_btn, "button_conv");
     g_signal_connect(m_ui->convert_btn, "clicked", G_CALLBACK(OnConvert), m_ui);
     gtk_box_pack_start (GTK_BOX (m_ui->btn_hbox), m_ui->convert_btn, FALSE, FALSE, 0);
     gtk_widget_set_sensitive (m_ui->convert_btn, FALSE);
 
+    m_ui->reset_btn = gtk_button_new_with_label("Reset");
+    gtk_widget_set_name(m_ui->reset_btn, "button_reset");
+    g_signal_connect(m_ui->reset_btn, "clicked", G_CALLBACK(OnReset), m_ui);
+    gtk_box_pack_start (GTK_BOX (m_ui->btn_hbox), m_ui->reset_btn, FALSE, FALSE, 0);
+
     m_ui->close_btn = gtk_button_new_with_label("Close");
-    gtk_widget_set_name(m_ui->close_btn, "button_2");
+    gtk_widget_set_name(m_ui->close_btn, "button_close");
     g_signal_connect_swapped(m_ui->close_btn, "clicked", G_CALLBACK(OnQuit), m_ui->window);
     gtk_box_pack_start (GTK_BOX (m_ui->btn_hbox), m_ui->close_btn, FALSE, FALSE, 0);
     gtk_widget_set_margin_left(m_ui->close_btn, 30);
@@ -487,6 +502,44 @@ void create_cbox(GtkWidget **cbox, char *nm, const char *arr[], int max, int act
     gtk_widget_set_valign(*cbox, GTK_ALIGN_CENTER);
     gtk_widget_set_margin_top (*cbox, 0);
     gtk_grid_attach(GTK_GRID (cntr), *cbox, col, row, 1, 1);
+
+    return;
+}
+
+
+/* Reset the form back to default */
+
+void reset_form(AppData *app_data, MainUi *m_ui)
+{  
+    char *out_dir;
+    gchar *rgba;
+    
+    css_set_button_status(m_ui->video_btn, 1, NULL);
+    rgba = gdk_rgba_to_string (m_ui->convbtn_bg_color);
+    css_set_button_status(m_ui->convert_btn, 3, rgba);
+    free(rgba);
+
+    gtk_entry_set_text(GTK_ENTRY (m_ui->fn), home_dir(m_ui->window));
+    app_data->video_fn[0] = '\0';
+    app_data->video_fn_last[0] = '\0';
+
+    out_dir = (char *) malloc(strlen(home_dir(m_ui->window)) + 8);
+    sprintf(out_dir, "%s%cmyimgs", home_dir(m_ui->window), d_separator);
+    gtk_entry_set_text(GTK_ENTRY (m_ui->out_dir), out_dir);
+    free(out_dir);
+
+    gtk_entry_set_text(GTK_ENTRY (m_ui->img_prefix), "Image-");
+
+    gtk_text_buffer_set_text (m_ui->txt_buffer, "\n\n\n", -1);
+
+    gtk_combo_box_set_active (GTK_COMBO_BOX(m_ui->frm_select_cbx), 0);
+    gtk_combo_box_set_active (GTK_COMBO_BOX(m_ui->codec_select_cbx), 0);
+    gtk_entry_set_text(GTK_ENTRY (m_ui->frm_interval), "1");
+    gtk_entry_set_text(GTK_ENTRY (m_ui->video_start), "\0");
+    gtk_entry_set_text(GTK_ENTRY (m_ui->duration), "\0");
+
+    gtk_widget_set_sensitive (m_ui->convert_btn, FALSE);
+    gtk_label_set_text(GTK_LABEL (m_ui->status_info), "Enter or Browse for a video file");
 
     return;
 }

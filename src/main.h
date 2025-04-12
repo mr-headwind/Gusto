@@ -60,7 +60,7 @@ typedef struct _main_ui
     GtkTextBuffer *txt_buffer;
     GtkWidget *video_info_vbox;
 
-    GtkWidget *convert_btn, *close_btn, *btn_hbox;
+    GtkWidget *video_btn, *convert_btn, *reset_btn, *close_btn, *btn_hbox;
 
     /* Callback Handlers */
     int close_hndlr_id;
@@ -74,4 +74,5 @@ typedef struct _main_ui
     guint img_file_count;
     int thread_init;
     int seek_play;
+    GdkRGBA *convbtn_bg_color;
 } MainUi;
